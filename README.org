@@ -1,0 +1,30 @@
+* Helm Github Stars
+
+~helm-github-stars~ is an *experimental* package that provides capabilities to fetch your starred repositories from github and select one for browsing.
+
+** Requirements
+  - Helm (https://github.com/emacs-helm/helm)
+
+** Installation
+Clone this repository and copy ~helm-github-stars.el~ in your ~load-path~
+
+And add this in your configuration:
+#+BEGIN_SRC elisp
+(require 'helm-github-stars)
+;; Setup your github username:
+(setq helm-github-stars-username "USERNAME")
+#+END_SRC
+
+** Usage
+
+Type ~M-x~ ~helm-github-stars~ to show starred repositories.
+
+Actually only latest 100 starred repositories will be shown, will be improved..
+
+** Run tests
+
+Move into repository's root directory and run:
+#+BEGIN_SRC shell
+cask install
+cask exec ert-runner
+#+END_SRC
