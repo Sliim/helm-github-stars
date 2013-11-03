@@ -1,0 +1,4 @@
+2013-11-03  Sliim  <sliim@mailoo.org>
+
+	* 1.0.0: Initial release
+	Implemented functions to fetch and parse github's stars.
