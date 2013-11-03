@@ -48,7 +48,10 @@
   :type 'string
   :group 'helm)
 
-(defvar helm-c-source-github-stars-list
+(defvar hgs/github-url "https://github.com/"
+  "Github URL for browsing.")
+
+(defvar hgs/helm-c-source
   `((name . "Github stars")
     (disable-shortcuts)
     (init . (lambda ()
@@ -57,7 +60,7 @@
                  (s-join "\n" (hgs/github-stars-list))))))
     (candidates-in-buffer)
     (action . (lambda (candidate)
-                (browse-url candidate))))
+                (browse-url (concat hgs/github-url candidate)))))
   "Helm source definition.")
 
 (defun hgs/fetch-github-stars ()
@@ -79,7 +82,7 @@
   (let ((github-stars (json-read-from-string (hgs/fetch-github-stars))))
     (setq i 0)
     (while (< i (length github-stars))
-      (add-to-list 'stars (cdr (assoc 'html_url (elt github-stars i))) t)
+      (add-to-list 'stars (cdr (assoc 'full_name (elt github-stars i))) t)
       (setq i (1+ i))))
   stars)
 
@@ -87,7 +90,7 @@
 (defun helm-github-stars ()
   "Show and Browse your github's stars."
   (interactive)
-  (helm :sources '(helm-c-source-github-stars-list)
+  (helm :sources '(hgs/helm-c-source)
         :buffer "*hgs*"
         :prompt "> "))
 

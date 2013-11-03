@@ -56,7 +56,7 @@
 
 (ert-deftest hgs/github-stars-list-test ()
   (should (equal (hgs/github-stars-list)
-                 '("https://github.com/Sliim/helm-github-stars"
-                   "https://github.com/foo/awesome-project"))))
+                 '("Sliim/helm-github-stars"
+                   "foo/awesome-project"))))
 
 ;;; helm-github-stars-test.el ends here
