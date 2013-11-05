@@ -59,4 +59,27 @@
                  '("Sliim/helm-github-stars"
                    "foo/awesome-project"))))
 
+(ert-deftest hgs/read-cache-file-test ()
+  (with-cache
+   (f-write-text "foo,baz,bar" 'utf-8 cache-test-file)
+   (should (equal (hgs/read-cache-file) '("foo" "baz" "bar")))))
+
+(ert-deftest hgs/write-cache-file-test ()
+  (with-cache
+   (hgs/write-cache-file '("foo" "bar" "baz"))
+   (should (equal (f-read-text cache-test-file) "foo,bar,baz"))))
+
+(ert-deftest hgs/cache-file-exists-test ()
+  (with-cache
+   (f-touch cache-test-file)
+   (should (hgs/cache-file-exists))
+   (f-delete cache-test-file)
+   (should (not (hgs/cache-file-exists)))))
+
+(ert-deftest hgs/clear-cache-file-test ()
+  (with-cache
+   (f-touch cache-test-file)
+   (hgs/clear-cache-file)
+   (should (not (file-exists-p cache-test-file)))))
+
 ;;; helm-github-stars-test.el ends here

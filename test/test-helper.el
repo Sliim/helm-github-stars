@@ -28,12 +28,26 @@
 
 ;;; Code:
 
+(defvar test-dir (file-name-directory load-file-name)
+  "Test directory.")
+
 (defvar root-dir (file-name-directory
                   (directory-file-name
-                   (file-name-directory load-file-name)))
+                   test-dir))
   "Root directory.")
 
+(defvar cache-test-file (expand-file-name "cache" test-dir)
+  "Test file for cache tests.")
+
+(require 'f)
 (require 'helm-github-stars
          (expand-file-name "helm-github-stars.el" root-dir))
+
+(defmacro with-cache (&rest body)
+  "Evaluate TEST with cache interaction."
+  (when (f-file? cache-test-file)
+    (f-delete cache-test-file))
+  `(let ((helm-github-stars-cache-file cache-test-file))
+    ,@body))
 
 ;;; test-helper.el ends here

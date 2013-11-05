@@ -5,4 +5,5 @@
 (depends-on "helm")
 
 (development
- (depends-on "ert-runner"))
+ (depends-on "ert-runner")
+ (depends-on "f"))

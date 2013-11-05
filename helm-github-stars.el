@@ -1,4 +1,4 @@
-;;; helm-github-stars.el --- Helm integration for your stared repositories on github
+;;; helm-github-stars.el --- Helm integration for your starred repositories on github
 ;;
 ;; Author: Sliim <sliim@mailoo.org>
 ;; Version: 1.0.0
@@ -48,6 +48,11 @@
   :type 'string
   :group 'helm)
 
+(defcustom helm-github-stars-cache-file (concat user-emacs-directory "hgs-cache")
+  "Cache file for starred repositories."
+  :type 'string
+  :group 'helm)
+
 (defvar hgs/github-url "https://github.com/"
   "Github URL for browsing.")
 
@@ -62,6 +67,29 @@
     (action . (lambda (candidate)
                 (browse-url (concat hgs/github-url candidate)))))
   "Helm source definition.")
+
+(defun hgs/read-cache-file ()
+  "Read cache file and return repository list."
+  (with-temp-buffer
+    (insert-file-contents helm-github-stars-cache-file)
+    (split-string (buffer-string) ",")))
+
+(defun hgs/write-cache-file (list)
+  "Write repository LIST in cache file."
+  (with-temp-buffer
+    (let ((file helm-github-stars-cache-file))
+      (insert (mapconcat 'identity list ","))
+      (when (file-writable-p file)
+        (write-region (point-min) (point-max) file)))))
+
+(defun hgs/cache-file-exists ()
+  "Check that cache file exists."
+  (file-exists-p helm-github-stars-cache-file))
+
+(defun hgs/clear-cache-file ()
+  "Delete file cache if exists."
+  (when (hgs/cache-file-exists)
+    (delete-file helm-github-stars-cache-file)))
 
 (defun hgs/fetch-github-stars ()
   "Request Github's api to get user's stars."
