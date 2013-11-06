@@ -34,7 +34,7 @@
 
 ;;; Code:
 
-(defvar github-stars-request-result-stub
+(defvar github-stars-response-test
   "[
   {
     \"full_name\": \"Sliim/helm-github-stars\",
@@ -49,15 +49,6 @@
     \"language\": \"Python\"
   }
 ]")
-
-(defun hgs/fetch-github-stars ()
-  "Stub function."
-  github-stars-request-result-stub)
-
-(ert-deftest hgs/github-stars-list-test ()
-  (should (equal (hgs/github-stars-list)
-                 '("Sliim/helm-github-stars"
-                   "foo/awesome-project"))))
 
 (ert-deftest hgs/read-cache-file-test ()
   (with-cache
@@ -81,5 +72,32 @@
    (f-touch cache-test-file)
    (hgs/clear-cache-file)
    (should (not (file-exists-p cache-test-file)))))
+
+(ert-deftest hgs/github-parse-github-response-test ()
+  (should (equal (hgs/parse-github-response github-stars-response-test)
+                 '("Sliim/helm-github-stars"
+                   "foo/awesome-project"))))
+
+(ert-deftest hgs/get-github-stars-with-generated-cache ()
+  (with-cache
+   (f-write-text "foo,bar,baz" 'utf-8 cache-test-file)
+   (should (equal (hgs/get-github-stars) '("foo" "bar" "baz")))))
+
+(ert-deftest helm-github-stars-generate-cache-file ()
+  (with-cache
+   (defun hgs/request-github-stars ()
+     "Stub github response."
+     github-stars-response-test)
+   (helm-github-stars-generate-cache-file)
+   (should (equal (f-read-text cache-test-file)
+                  "Sliim/helm-github-stars,foo/awesome-project"))))
+
+(ert-deftest hgs/get-github-stars-without-generated-cache ()
+  (with-cache
+   (defun hgs/request-github-stars ()
+     "Stub github response."
+     github-stars-response-test)
+   (should (equal (hgs/get-github-stars) '("Sliim/helm-github-stars"
+                                           "foo/awesome-project")))))
 
 ;;; helm-github-stars-test.el ends here

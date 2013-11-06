@@ -45,9 +45,11 @@
 
 (defmacro with-cache (&rest body)
   "Evaluate TEST with cache interaction."
-  (when (f-file? cache-test-file)
-    (f-delete cache-test-file))
   `(let ((helm-github-stars-cache-file cache-test-file))
-    ,@body))
+     (when (f-file? cache-test-file)
+       (f-delete cache-test-file))
+     ,@body
+     (when (f-file? cache-test-file)
+       (f-delete cache-test-file))))
 
 ;;; test-helper.el ends here

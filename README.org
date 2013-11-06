@@ -21,6 +21,15 @@ Type ~M-x~ ~helm-github-stars~ to show starred repositories.
 
 Actually only latest 100 starred repositories will be shown, will be improved..
 
+At the first execution of ~helm-github-stars~, list of repositories is
+fetched from github and saved into a cache file.
+Default cache location: ~$HOME/.emacs.d/hgs-cache~.
+
+You can customize cache file path:
+#+BEGIN_SRC elisp
+(setq helm-github-stars-cache-file "/cache/location")
+#+END_SRC
+
 ** Run tests
 
 Move into repository's root directory and run:

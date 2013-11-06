@@ -62,7 +62,7 @@
     (init . (lambda ()
               (with-current-buffer (helm-candidate-buffer 'local)
                 (insert
-                 (s-join "\n" (hgs/github-stars-list))))))
+                 (s-join "\n" (hgs/get-github-stars))))))
     (candidates-in-buffer)
     (action . (lambda (candidate)
                 (browse-url (concat hgs/github-url candidate)))))
@@ -91,8 +91,8 @@
   (when (hgs/cache-file-exists)
     (delete-file helm-github-stars-cache-file)))
 
-(defun hgs/fetch-github-stars ()
-  "Request Github's api to get user's stars."
+(defun hgs/request-github-stars ()
+  "Request Github API user's stars and return response."
   (with-current-buffer
       (url-retrieve-synchronously (concat "https://api.github.com/users/"
                                           helm-github-stars-username
@@ -104,15 +104,26 @@
       (and start
            (buffer-substring start (point-max))))))
 
-(defun hgs/github-stars-list ()
-  "Return github stars list."
+(defun hgs/parse-github-response (response)
+  "Parse Github API RESPONSE to get repositories full name."
   (setq stars '())
-  (let ((github-stars (json-read-from-string (hgs/fetch-github-stars))))
+  (let ((github-stars (json-read-from-string response)))
     (setq i 0)
     (while (< i (length github-stars))
       (add-to-list 'stars (cdr (assoc 'full_name (elt github-stars i))) t)
       (setq i (1+ i))))
   stars)
+
+(defun hgs/get-github-stars ()
+  "Get github stars"
+  (when (not (hgs/cache-file-exists))
+    (helm-github-stars-generate-cache-file))
+  (hgs/read-cache-file))
+
+(defun helm-github-stars-generate-cache-file ()
+  "Generate or regenerate cache file if already exists."
+  (interactive)
+  (hgs/write-cache-file (hgs/parse-github-response (hgs/request-github-stars))))
 
 ;;;###autoload
 (defun helm-github-stars ()
