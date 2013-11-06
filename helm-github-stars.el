@@ -127,6 +127,7 @@
 
 (defun helm-github-stars-fetch ()
   "Remove cache file before calling helm-github-stars."
+  (interactive)
   (hgs/clear-cache-file)
   (helm-github-stars))
 
