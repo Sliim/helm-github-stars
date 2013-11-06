@@ -69,13 +69,13 @@
   "Helm source definition.")
 
 (defun hgs/read-cache-file ()
-  "Read cache file and return repository list."
+  "Read cache file and return list of starred repositories."
   (with-temp-buffer
     (insert-file-contents helm-github-stars-cache-file)
     (split-string (buffer-string) ",")))
 
 (defun hgs/write-cache-file (list)
-  "Write repository LIST in cache file."
+  "Write LIST of repositories in cache file."
   (with-temp-buffer
     (let ((file helm-github-stars-cache-file))
       (insert (mapconcat 'identity list ","))
@@ -115,7 +115,7 @@
   stars)
 
 (defun hgs/get-github-stars ()
-  "Get github stars"
+  "Get github stars."
   (when (not (hgs/cache-file-exists))
     (helm-github-stars-generate-cache-file))
   (hgs/read-cache-file))
@@ -124,6 +124,11 @@
   "Generate or regenerate cache file if already exists."
   (interactive)
   (hgs/write-cache-file (hgs/parse-github-response (hgs/request-github-stars))))
+
+(defun helm-github-stars-fetch ()
+  "Remove cache file before calling helm-github-stars."
+  (hgs/clear-cache-file)
+  (helm-github-stars))
 
 ;;;###autoload
 (defun helm-github-stars ()

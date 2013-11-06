@@ -78,12 +78,12 @@
                  '("Sliim/helm-github-stars"
                    "foo/awesome-project"))))
 
-(ert-deftest hgs/get-github-stars-with-generated-cache ()
+(ert-deftest hgs/get-github-stars-with-generated-cache-test ()
   (with-cache
    (f-write-text "foo,bar,baz" 'utf-8 cache-test-file)
    (should (equal (hgs/get-github-stars) '("foo" "bar" "baz")))))
 
-(ert-deftest helm-github-stars-generate-cache-file ()
+(ert-deftest helm-github-stars-generate-cache-file-test ()
   (with-cache
    (defun hgs/request-github-stars ()
      "Stub github response."
@@ -92,12 +92,21 @@
    (should (equal (f-read-text cache-test-file)
                   "Sliim/helm-github-stars,foo/awesome-project"))))
 
-(ert-deftest hgs/get-github-stars-without-generated-cache ()
+(ert-deftest hgs/get-github-stars-without-generated-cache-test ()
   (with-cache
    (defun hgs/request-github-stars ()
      "Stub github response."
      github-stars-response-test)
    (should (equal (hgs/get-github-stars) '("Sliim/helm-github-stars"
                                            "foo/awesome-project")))))
+
+(ert-deftest helm-github-stars-fetch-test ()
+  "This test just check that cache file is removed before calling helm-github-stars"
+  (with-cache
+   (defun helm-github-stars ()
+     "Overwrite helm-github-stars. Return t if cache file exists, nil if not exists."
+     (f-file? cache-test-file))
+   (f-write-text "foo,baz,bar" 'utf-8 cache-test-file)
+   (should (not (helm-github-stars-fetch)))))
 
 ;;; helm-github-stars-test.el ends here

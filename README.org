@@ -27,7 +27,7 @@ Default cache location: ~$HOME/.emacs.d/hgs-cache~.
 
 You can customize cache file path:
 #+BEGIN_SRC elisp
-(setq helm-github-stars-cache-file "/cache/location")
+(setq helm-github-stars-cache-file "/cache/path")
 #+END_SRC
 
 ** Run tests
