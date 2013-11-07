@@ -1,3 +1,9 @@
+2013-11-07  Sliim  <sliim@mailoo.org>
+
+	* 1.0.2: Recursive fetch.
+	Implement hgs/generate-cache-file function to fetch
+	all page on github API.
+
 2013-11-06  Sliim  <sliim@mailoo.org>
 
 	* 1.0.1: Implemented cache system.
