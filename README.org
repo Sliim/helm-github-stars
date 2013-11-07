@@ -1,29 +1,45 @@
 * Helm Github Stars
 
-~helm-github-stars~ is an *experimental* package that provides capabilities to fetch your starred repositories from github and select one for browsing.
+~helm-github-stars~ provides capabilities to fetch your starred repositories from github and select one for browsing.
 
 ** Requirements
   - Helm (https://github.com/emacs-helm/helm)
 
 ** Installation
-Clone this repository and copy ~helm-github-stars.el~ in your ~load-path~
+*** MELPA
+~helm-github-stars~ is available on [[http://melpa.milkbox.net/][Melpa]]:
+#+BEGIN_SRC
+M-x package-install helm-github-stars
+#+END_SRC
 
-And add this in your configuration:
+*** Manual
+Drop ~helm-github-stars.el~ in your ~load-path~:
 #+BEGIN_SRC elisp
+(add-to-list 'load-path "/path/to/helm-github-stars")
 (require 'helm-github-stars)
-;; Setup your github username:
-(setq helm-github-stars-username "USERNAME")
 #+END_SRC
 
 ** Usage
-Type ~M-x~ ~helm-github-stars~ to show starred repositories.
+To show your starred repositories:
+#+BEGIN_SRC
+M-x helm-github-stars
+#+END_SRC
 
+*** Setup your username
+#+BEGIN_SRC elisp
+(setq helm-github-stars-username "USERNAME")
+#+END_SRC
+
+*** Cache
 At the first execution of ~helm-github-stars~, list of repositories is
 fetched from github and saved into a cache file.
-Default cache location: ~$HOME/.emacs.d/hgs-cache~.
-To refresh cache and open helm interface run ~helm-github-stars-fetch~.
 
-You can customize cache file path:
+To refresh cache and open helm interface run:
+#+BEGIN_SRC
+M-x helm-github-stars-fetch
+#+END_SRC
+
+The default cache location is ~$HOME/.emacs.d/hgs-cache~, you can customize this path:
 #+BEGIN_SRC elisp
 (setq helm-github-stars-cache-file "/cache/path")
 #+END_SRC
