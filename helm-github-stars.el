@@ -19,6 +19,14 @@
 ;;  (setq helm-github-stars-username "USERNAME")
 ;;
 ;;  Type M-x helm-github-stars to show starred repositories.
+;;
+;; At the first execution of ~helm-github-stars~, list of repositories is
+;; fetched from github and saved into a cache file.
+;; Default cache location: ~$HOME/.emacs.d/hgs-cache~.
+;; To refresh cache and open helm interface run ~helm-github-stars-fetch~.
+;;
+;; You can customize cache file path:
+;; (setq helm-github-stars-cache-file "/cache/path")
 
 ;;; License:
 
@@ -91,12 +99,27 @@
   (when (hgs/cache-file-exists)
     (delete-file helm-github-stars-cache-file)))
 
-(defun hgs/request-github-stars ()
-  "Request Github API user's stars and return response."
+(defun hgs/generate-cache-file ()
+  "Generate or regenerate cache file if already exists."
+  (let ((stars-list '())
+        (next-request t)
+        (current-page 1))
+    (while next-request
+      (let ((response (hgs/parse-github-response (hgs/request-github-stars current-page))))
+        (if (not response)
+            (setq next-request nil)
+          (progn
+            (setq stars-list (append stars-list response))
+            (setq current-page (1+ current-page))))))
+  (hgs/write-cache-file stars-list)))
+
+(defun hgs/request-github-stars (page)
+  "Request Github API user's stars with PAGE parameter and return response."
   (with-current-buffer
       (url-retrieve-synchronously (concat "https://api.github.com/users/"
                                           helm-github-stars-username
-                                          "/starred?per_page=100"))
+                                          "/starred?per_page=100&page="
+                                          (number-to-string page)))
     (let ((start (save-excursion
                    (goto-char (point-min))
                    (and (re-search-forward "\\[" (point-max) t)
@@ -117,13 +140,8 @@
 (defun hgs/get-github-stars ()
   "Get github stars."
   (when (not (hgs/cache-file-exists))
-    (helm-github-stars-generate-cache-file))
+    (hgs/generate-cache-file))
   (hgs/read-cache-file))
-
-(defun helm-github-stars-generate-cache-file ()
-  "Generate or regenerate cache file if already exists."
-  (interactive)
-  (hgs/write-cache-file (hgs/parse-github-response (hgs/request-github-stars))))
 
 (defun helm-github-stars-fetch ()
   "Remove cache file before calling helm-github-stars."

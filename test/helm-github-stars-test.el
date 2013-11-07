@@ -34,21 +34,25 @@
 
 ;;; Code:
 
-(defvar github-stars-response-test
-  "[
+(defvar github-stars-response-stub
+  ["[
   {
     \"full_name\": \"Sliim/helm-github-stars\",
     \"html_url\": \"https://github.com/Sliim/helm-github-stars\",
     \"description\": \"An Emacs helm interface for github user's stars.\",
     \"language\": \"Emacs Lisp\"
-  },
-  {
+  },{
     \"full_name\": \"foo/awesome-project\",
     \"html_url\": \"https://github.com/foo/awesome-project\",
     \"description\": \"Wow An Amewome Project !!.\",
     \"language\": \"Python\"
-  }
-]")
+  }]" "[
+  {
+    \"full_name\": \"bar/another-project\",
+    \"html_url\": \"https://github.com/bar/another-project\",
+    \"description\": \"Another Project ...\",
+    \"language\": \"Haskell\"
+  }]" "[ ]"])
 
 (ert-deftest hgs/read-cache-file-test ()
   (with-cache
@@ -73,8 +77,17 @@
    (hgs/clear-cache-file)
    (should (not (file-exists-p cache-test-file)))))
 
+(ert-deftest hgs/generate-cache-file-test ()
+  (with-cache
+   (defun hgs/request-github-stars (page)
+     "Stub github response. Return PAGE element."
+     (elt github-stars-response-stub (1- page)))
+   (hgs/generate-cache-file)
+   (should (equal (f-read-text cache-test-file)
+                  "Sliim/helm-github-stars,foo/awesome-project,bar/another-project"))))
+
 (ert-deftest hgs/github-parse-github-response-test ()
-  (should (equal (hgs/parse-github-response github-stars-response-test)
+  (should (equal (hgs/parse-github-response (elt github-stars-response-stub 0))
                  '("Sliim/helm-github-stars"
                    "foo/awesome-project"))))
 
@@ -83,22 +96,14 @@
    (f-write-text "foo,bar,baz" 'utf-8 cache-test-file)
    (should (equal (hgs/get-github-stars) '("foo" "bar" "baz")))))
 
-(ert-deftest helm-github-stars-generate-cache-file-test ()
-  (with-cache
-   (defun hgs/request-github-stars ()
-     "Stub github response."
-     github-stars-response-test)
-   (helm-github-stars-generate-cache-file)
-   (should (equal (f-read-text cache-test-file)
-                  "Sliim/helm-github-stars,foo/awesome-project"))))
-
 (ert-deftest hgs/get-github-stars-without-generated-cache-test ()
   (with-cache
-   (defun hgs/request-github-stars ()
+   (defun hgs/request-github-stars (page)
      "Stub github response."
-     github-stars-response-test)
+     (elt github-stars-response-stub (1- page)))
    (should (equal (hgs/get-github-stars) '("Sliim/helm-github-stars"
-                                           "foo/awesome-project")))))
+                                           "foo/awesome-project"
+                                           "bar/another-project")))))
 
 (ert-deftest helm-github-stars-fetch-test ()
   "This test just check that cache file is removed before calling helm-github-stars"
