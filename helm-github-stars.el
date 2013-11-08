@@ -76,6 +76,12 @@
                 (browse-url (concat hgs/github-url candidate)))))
   "Helm source definition.")
 
+(defvar hgs/helm-c-source-search
+  `((name . "Search on github")
+    (dummy)
+    (action . (lambda (candidate)
+                (browse-url (concat "https://github.com/search?q=" candidate))))))
+
 (defun hgs/read-cache-file ()
   "Read cache file and return list of starred repositories."
   (with-temp-buffer
@@ -153,7 +159,8 @@
 (defun helm-github-stars ()
   "Show and Browse your github's stars."
   (interactive)
-  (helm :sources '(hgs/helm-c-source)
+  (helm :sources '(hgs/helm-c-source
+                   hgs/helm-c-source-search)
         :buffer "*hgs*"
         :prompt "> "))
 
