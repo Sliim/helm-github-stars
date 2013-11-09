@@ -64,13 +64,23 @@
 (defvar hgs/github-url "https://github.com/"
   "Github URL for browsing.")
 
-(defvar hgs/helm-c-source
-  `((name . "Github stars")
+(defvar hgs/helm-c-source-stars
+  `((name . "Starred repositories")
     (disable-shortcuts)
     (init . (lambda ()
               (with-current-buffer (helm-candidate-buffer 'local)
-                (insert
-                 (s-join "\n" (hgs/get-github-stars))))))
+                (insert (s-join "\n" (hgs/get-github-stars))))))
+    (candidates-in-buffer)
+    (action . (lambda (candidate)
+                (browse-url (concat hgs/github-url candidate)))))
+  "Helm source definition.")
+
+(defvar hgs/helm-c-source-repos
+  `((name . "Your repositories")
+    (disable-shortcuts)
+    (init . (lambda ()
+              (with-current-buffer (helm-candidate-buffer 'local)
+                (insert (s-join "\n" (hgs/get-github-repos))))))
     (candidates-in-buffer)
     (action . (lambda (candidate)
                 (browse-url (concat hgs/github-url candidate)))))
@@ -86,13 +96,14 @@
   "Read cache file and return list of starred repositories."
   (with-temp-buffer
     (insert-file-contents helm-github-stars-cache-file)
-    (split-string (buffer-string) ",")))
+    (let ((json-object-type 'hash-table))
+      (json-read-from-string (buffer-string)))))
 
-(defun hgs/write-cache-file (list)
-  "Write LIST of repositories in cache file."
+(defun hgs/write-cache-file (hash)
+  "Write HASH of repositories in cache file."
   (with-temp-buffer
     (let ((file helm-github-stars-cache-file))
-      (insert (mapconcat 'identity list ","))
+      (insert (json-encode hash))
       (when (file-writable-p file)
         (write-region (point-min) (point-max) file)))))
 
@@ -107,25 +118,53 @@
 
 (defun hgs/generate-cache-file ()
   "Generate or regenerate cache file if already exists."
-  (let ((stars-list '())
-        (next-request t)
-        (current-page 1))
-    (while next-request
-      (let ((response (hgs/parse-github-response (hgs/request-github-stars current-page))))
-        (if (not response)
-            (setq next-request nil)
-          (progn
-            (setq stars-list (append stars-list response))
-            (setq current-page (1+ current-page))))))
-  (hgs/write-cache-file stars-list)))
+  (let ((stars-list [])
+        (repos-list [])
+        (cache-hash-table (make-hash-table :test 'equal)))
+    ;; Fetch user's starred repositories
+    (let ((next-request t)
+          (current-page 1))
+      (while next-request
+        (let ((response (hgs/parse-github-response (hgs/request-github-stars current-page))))
+          (message "%S" response)
+          (if (= 0 (length response))
+              (setq next-request nil)
+            (progn
+              (setq stars-list (vconcat stars-list response))
+              (setq current-page (1+ current-page)))))))
+    ;; Fetch user's repositories
+    (let ((next-request t)
+          (current-page 1))
+      (while next-request
+        (let ((response (hgs/parse-github-response (hgs/request-github-repos current-page))))
+          (if (= 0 (length response))
+              (setq next-request nil)
+            (progn
+              (setq repos-list (vconcat repos-list response))
+              (setq current-page (1+ current-page)))))))
+
+    (puthash '"stars" stars-list cache-hash-table)
+    (puthash '"repos" repos-list cache-hash-table)
+    (hgs/write-cache-file cache-hash-table)))
 
 (defun hgs/request-github-stars (page)
   "Request Github API user's stars with PAGE parameter and return response."
+  (hgs/request-github (concat "https://api.github.com/users/"
+                              helm-github-stars-username
+                              "/starred?per_page=100&page="
+                              (number-to-string page))))
+
+(defun hgs/request-github-repos (page)
+  "Request Github API user's repositories with PAGE parameter and return response."
+  (hgs/request-github (concat "https://api.github.com/users/"
+                              helm-github-stars-username
+                              "/repos?per_page=100&page="
+                              (number-to-string page))))
+
+(defun hgs/request-github (url)
+  "Request Github URL and return response."
   (with-current-buffer
-      (url-retrieve-synchronously (concat "https://api.github.com/users/"
-                                          helm-github-stars-username
-                                          "/starred?per_page=100&page="
-                                          (number-to-string page)))
+      (url-retrieve-synchronously url)
     (let ((start (save-excursion
                    (goto-char (point-min))
                    (and (re-search-forward "\\[" (point-max) t)
@@ -135,19 +174,25 @@
 
 (defun hgs/parse-github-response (response)
   "Parse Github API RESPONSE to get repositories full name."
-  (setq stars '())
-  (let ((github-stars (json-read-from-string response)))
-    (setq i 0)
-    (while (< i (length github-stars))
-      (add-to-list 'stars (cdr (assoc 'full_name (elt github-stars i))) t)
-      (setq i (1+ i))))
-  stars)
+  (let ((github-repos (json-read-from-string response))
+        (repos [])
+        (i 0))
+    (while (< i (length github-repos))
+      (setq repos (vconcat repos (vector (cdr (assoc 'full_name (elt github-repos i))))))
+      (setq i (1+ i)))
+    repos))
 
 (defun hgs/get-github-stars ()
-  "Get github stars."
+  "Get user's starred repositories."
   (when (not (hgs/cache-file-exists))
     (hgs/generate-cache-file))
-  (hgs/read-cache-file))
+  (gethash "stars" (hgs/read-cache-file)))
+
+(defun hgs/get-github-repos ()
+  "Get user's repositories."
+  (when (not (hgs/cache-file-exists))
+    (hgs/generate-cache-file))
+  (gethash "repos" (hgs/read-cache-file)))
 
 (defun helm-github-stars-fetch ()
   "Remove cache file before calling helm-github-stars."
@@ -159,8 +204,10 @@
 (defun helm-github-stars ()
   "Show and Browse your github's stars."
   (interactive)
-  (helm :sources '(hgs/helm-c-source
-                   hgs/helm-c-source-search)
+  (helm :sources '(hgs/helm-c-source-search
+                   hgs/helm-c-source-stars
+                   hgs/helm-c-source-repos
+                   )
         :buffer "*hgs*"
         :prompt "> "))
 

@@ -52,4 +52,30 @@
      (when (f-file? cache-test-file)
        (f-delete cache-test-file))))
 
+;;Stubing
+(defvar hgs-test/github-stars-response-stub
+  ["[ {\"full_name\": \"star/1\"},{\"full_name\": \"star/2\"}]"
+   "[ {\"full_name\": \"star/3\"}]"
+   "[ ]"])
+
+(defvar hgs-test/github-repos-response-stub
+  ["[ {\"full_name\": \"repo/1\"},{\"full_name\": \"repo/2\"}]"
+   "[ {\"full_name\": \"repo/3\"}]"
+   "[ ]"])
+
+(defvar hgs-test/cache-json-string
+  "{\"repos\":[\"repo\\/1\", \"repo\\/2\", \"repo\\/3\"], \"stars\":[\"star\\/1\", \"star\\/2\", \"star\\/3\"]}")
+
+(defvar hgs-test/repos-list
+  ["repo/1" "repo/2" "repo/3"])
+
+(defvar hgs-test/stars-list
+  ["star/1" "star/2" "star/3"])
+
+(defvar hgs-test/cache-hash-table
+  (make-hash-table :test 'equal))
+
+(puthash '"stars" hgs-test/stars-list hgs-test/cache-hash-table)
+(puthash '"repos" hgs-test/repos-list hgs-test/cache-hash-table)
+
 ;;; test-helper.el ends here
