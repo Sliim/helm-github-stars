@@ -1,3 +1,9 @@
+2013-11-09  Sliim  <sliim@mailoo.org>
+
+	* 1.1.0: Added helm sources:
+	- User's repositories source
+	- Github search source
+
 2013-11-07  Sliim  <sliim@mailoo.org>
 
 	* 1.0.2: Recursive fetch.

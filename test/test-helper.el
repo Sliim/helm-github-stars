@@ -1,7 +1,7 @@
 ;;; test-helper.el --- Test helper for helm-github-stars test suite.
 ;;
 ;; Author: Sliim <sliim@mailoo.org>
-;; Version: 1.0.2
+;; Version: 1.1.0
 
 ;; This file is not part of GNU Emacs.
 
