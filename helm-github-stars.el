@@ -126,7 +126,6 @@
           (current-page 1))
       (while next-request
         (let ((response (hgs/parse-github-response (hgs/request-github-stars current-page))))
-          (message "%S" response)
           (if (= 0 (length response))
               (setq next-request nil)
             (progn
