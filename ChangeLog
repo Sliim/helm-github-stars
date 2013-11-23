@@ -1,3 +1,9 @@
+2013-11-23  Sliim  <sliim@mailoo.org>
+
+	* 1.1.1: Added repository's description
+	- Change cache file format (printed hash-table)
+	- Add description in helm interface
+
 2013-11-09  Sliim  <sliim@mailoo.org>
 
 	* 1.1.0: Added helm sources:

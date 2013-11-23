@@ -1,7 +1,7 @@
 ;;; helm-github-stars-test.el --- Test suite for helm-github-stars.
 ;;
 ;; Author: Sliim <sliim@mailoo.org>
-;; Version: 1.1.0
+;; Version: 1.1.1
 
 ;; This file is not part of GNU Emacs.
 
