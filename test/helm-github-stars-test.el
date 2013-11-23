@@ -36,7 +36,7 @@
 
 (ert-deftest hgs/read-cache-file-test ()
   (with-cache
-   (f-write-text hgs-test/cache-json-string 'utf-8 cache-test-file)
+   (f-write-text hgs-test/cache-string 'utf-8 cache-test-file)
    (should (equal (gethash "repos" (hgs/read-cache-file)) hgs-test/repos-list))
    (should (equal (gethash "stars" (hgs/read-cache-file)) hgs-test/stars-list))))
 
@@ -44,7 +44,7 @@
   (with-cache
    (hgs/write-cache-file hgs-test/cache-hash-table)
    (should (equal (f-read-text cache-test-file)
-                  hgs-test/cache-json-string))))
+                  hgs-test/cache-string))))
 
 (ert-deftest hgs/cache-file-exists-test ()
   (with-cache
@@ -69,16 +69,16 @@
      (elt hgs-test/github-repos-response-stub (1- page)))
    (hgs/generate-cache-file)
    (should (equal (f-read-text cache-test-file)
-                  hgs-test/cache-json-string))))
+                  hgs-test/cache-string))))
 
 (ert-deftest hgs/parse-github-response-test ()
   (should (equal (hgs/parse-github-response (elt hgs-test/github-stars-response-stub 0))
-                 ["star/1" "star/2"])))
+                 ["star/1 - desc-star1" "star/2 - desc-star2"])))
 
 (ert-deftest hgs/get-github-stars-with-generated-cache-test ()
   (with-cache
-   (f-write-text hgs-test/cache-json-string 'utf-8 cache-test-file)
-   (should (equal (hgs/get-github-stars) ["star/1" "star/2" "star/3"]))))
+   (f-write-text hgs-test/cache-string 'utf-8 cache-test-file)
+   (should (equal (hgs/get-github-stars) ["star/1 - desc-star1" "star/2 - desc-star2" "star/3 - desc-star3"]))))
 
 (ert-deftest hgs/get-github-stars-without-generated-cache-test ()
   (with-cache
@@ -88,12 +88,12 @@
    (defun hgs/request-github-repos (page)
      "Stub github response."
      (elt hgs-test/github-repos-response-stub (1- page)))
-   (should (equal (hgs/get-github-stars) ["star/1" "star/2" "star/3"]))))
+   (should (equal (hgs/get-github-stars) ["star/1 - desc-star1" "star/2 - desc-star2" "star/3 - desc-star3"]))))
 
 (ert-deftest hgs/get-github-repos-with-generated-cache-test ()
   (with-cache
-   (f-write-text hgs-test/cache-json-string 'utf-8 cache-test-file)
-   (should (equal (hgs/get-github-repos) ["repo/1" "repo/2" "repo/3"]))))
+   (f-write-text hgs-test/cache-string 'utf-8 cache-test-file)
+   (should (equal (hgs/get-github-repos) ["repo/1 - desc-repo1" "repo/2 - desc-repo2" "repo/3 - desc-repo3"]))))
 
 (ert-deftest hgs/get-github-repos-without-generated-cache-test ()
   (with-cache
@@ -103,7 +103,7 @@
    (defun hgs/request-github-repos (page)
      "Stub github response."
      (elt hgs-test/github-repos-response-stub (1- page)))
-   (should (equal (hgs/get-github-repos) ["repo/1" "repo/2" "repo/3"]))))
+   (should (equal (hgs/get-github-repos) ["repo/1 - desc-repo1" "repo/2 - desc-repo2" "repo/3 - desc-repo3"]))))
 
 (ert-deftest helm-github-stars-fetch-test ()
   "This test just check that cache file is removed before calling helm-github-stars"
@@ -111,7 +111,7 @@
    (defun helm-github-stars ()
      "Overwrite helm-github-stars. Return t if cache file exists, nil if not exists."
      (f-file? cache-test-file))
-   (f-write-text hgs-test/cache-json-string 'utf-8 cache-test-file)
+   (f-write-text hgs-test/cache-string 'utf-8 cache-test-file)
    (should (not (helm-github-stars-fetch)))))
 
 ;;; helm-github-stars-test.el ends here

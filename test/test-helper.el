@@ -44,7 +44,7 @@
          (expand-file-name "helm-github-stars.el" root-dir))
 
 (defmacro with-cache (&rest body)
-  "Evaluate TEST with cache interaction."
+  "Evaluate BODY with cache interaction."
   `(let ((helm-github-stars-cache-file cache-test-file))
      (when (f-file? cache-test-file)
        (f-delete cache-test-file))
@@ -54,23 +54,23 @@
 
 ;;Stubing
 (defvar hgs-test/github-stars-response-stub
-  ["[ {\"full_name\": \"star/1\"},{\"full_name\": \"star/2\"}]"
-   "[ {\"full_name\": \"star/3\"}]"
+  ["[ {\"full_name\": \"star/1\", \"description\": \"desc-star1\"},{\"full_name\": \"star/2\", \"description\": \"desc-star2\"}]"
+   "[ {\"full_name\": \"star/3\", \"description\": \"desc-star3\"}]"
    "[ ]"])
 
 (defvar hgs-test/github-repos-response-stub
-  ["[ {\"full_name\": \"repo/1\"},{\"full_name\": \"repo/2\"}]"
-   "[ {\"full_name\": \"repo/3\"}]"
+  ["[ {\"full_name\": \"repo/1\", \"description\": \"desc-repo1\"},{\"full_name\": \"repo/2\", \"description\": \"desc-repo2\"}]"
+   "[ {\"full_name\": \"repo/3\", \"description\": \"desc-repo3\"}]"
    "[ ]"])
 
-(defvar hgs-test/cache-json-string
-  "{\"repos\":[\"repo\\/1\", \"repo\\/2\", \"repo\\/3\"], \"stars\":[\"star\\/1\", \"star\\/2\", \"star\\/3\"]}")
+(defvar hgs-test/cache-string
+  "\n#s(hash-table size 65 test equal rehash-size 1.5 rehash-threshold 0.8 data (\"stars\" [\"star/1 - desc-star1\" \"star/2 - desc-star2\" \"star/3 - desc-star3\"] \"repos\" [\"repo/1 - desc-repo1\" \"repo/2 - desc-repo2\" \"repo/3 - desc-repo3\"]))\n")
 
 (defvar hgs-test/repos-list
-  ["repo/1" "repo/2" "repo/3"])
+  ["repo/1 - desc-repo1" "repo/2 - desc-repo2" "repo/3 - desc-repo3"])
 
 (defvar hgs-test/stars-list
-  ["star/1" "star/2" "star/3"])
+  ["star/1 - desc-star1" "star/2 - desc-star2" "star/3 - desc-star3"])
 
 (defvar hgs-test/cache-hash-table
   (make-hash-table :test 'equal))

@@ -72,7 +72,8 @@
                 (insert (s-join "\n" (hgs/get-github-stars))))))
     (candidates-in-buffer)
     (action . (lambda (candidate)
-                (browse-url (concat hgs/github-url candidate)))))
+                (let ((repo (substring candidate 0 (string-match " - " candidate))))
+                  (browse-url (concat hgs/github-url repo))))))
   "Helm source definition.")
 
 (defvar hgs/helm-c-source-repos
@@ -83,7 +84,8 @@
                 (insert (s-join "\n" (hgs/get-github-repos))))))
     (candidates-in-buffer)
     (action . (lambda (candidate)
-                (browse-url (concat hgs/github-url candidate)))))
+                (let ((repo (substring candidate 0 (string-match " - " candidate))))
+                  (browse-url (concat hgs/github-url repo))))))
   "Helm source definition.")
 
 (defvar hgs/helm-c-source-search
@@ -96,14 +98,13 @@
   "Read cache file and return list of starred repositories."
   (with-temp-buffer
     (insert-file-contents helm-github-stars-cache-file)
-    (let ((json-object-type 'hash-table))
-      (json-read-from-string (buffer-string)))))
+    (read (current-buffer))))
 
 (defun hgs/write-cache-file (hash)
   "Write HASH of repositories in cache file."
   (with-temp-buffer
     (let ((file helm-github-stars-cache-file))
-      (insert (json-encode hash))
+      (print hash (current-buffer))
       (when (file-writable-p file)
         (write-region (point-min) (point-max) file)))))
 
@@ -177,7 +178,10 @@
         (repos [])
         (i 0))
     (while (< i (length github-repos))
-      (setq repos (vconcat repos (vector (cdr (assoc 'full_name (elt github-repos i))))))
+      (setq repos (vconcat repos (vector (concat
+                                          (cdr (assoc 'full_name (elt github-repos i)))
+                                          " - "
+                                          (cdr (assoc 'description (elt github-repos i)))))))
       (setq i (1+ i)))
     repos))
 
