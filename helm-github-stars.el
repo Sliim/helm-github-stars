@@ -103,7 +103,8 @@
 (defun hgs/write-cache-file (hash)
   "Write HASH of repositories in cache file."
   (with-temp-buffer
-    (let ((file helm-github-stars-cache-file))
+    (let ((file helm-github-stars-cache-file)
+          (coding-system-for-write 'utf-8))
       (print hash (current-buffer))
       (when (file-writable-p file)
         (write-region (point-min) (point-max) file)))))
