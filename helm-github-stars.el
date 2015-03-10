@@ -170,7 +170,9 @@
                    (and (re-search-forward "\\[" (point-max) t)
                         (match-beginning 0)))))
       (and start
-           (buffer-substring start (point-max))))))
+           (decode-coding-string
+            (buffer-substring-no-properties start (point-max))
+            'utf-8)))))
 
 (defun hgs/parse-github-response (response)
   "Parse Github API RESPONSE to get repositories full name."
