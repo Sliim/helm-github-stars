@@ -52,15 +52,18 @@
 (require 'helm)
 (require 'json)
 
+(defgroup helm-github-stars nil
+  "Helm integration for your starred repositories on github."
+  :group 'helm
+  :prefix "helm-github-stars-")
+
 (defcustom helm-github-stars-username "Sliim"
   "Github's username to fetch starred repositories."
-  :type 'string
-  :group 'helm)
+  :type 'string)
 
 (defcustom helm-github-stars-cache-file (concat user-emacs-directory "hgs-cache")
   "Cache file for starred repositories."
-  :type 'string
-  :group 'helm)
+  :type 'string)
 
 (defvar hgs/github-url "https://github.com/"
   "Github URL for browsing.")
