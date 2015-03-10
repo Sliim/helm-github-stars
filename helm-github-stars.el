@@ -213,8 +213,8 @@
   (interactive)
   (helm :sources '(hgs/helm-c-source-search
                    hgs/helm-c-source-stars
-                   hgs/helm-c-source-repos
-                   )
+                   hgs/helm-c-source-repos)
+        :candidate-number-limit 9999
         :buffer "*hgs*"
         :prompt "> "))
 
