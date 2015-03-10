@@ -1,6 +1,7 @@
 ;;; helm-github-stars.el --- Helm integration for your starred repositories on github
 ;;
 ;; Author: Sliim <sliim@mailoo.org>
+;; URL: https://github.com/Sliim/helm-github-stars
 ;; Version: 1.1.1
 ;; Package-Requires: ((helm "1.5.5"))
 ;; Keywords: helm github stars
