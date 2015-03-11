@@ -211,9 +211,9 @@
 (defun helm-github-stars ()
   "Show and Browse your github's stars."
   (interactive)
-  (helm :sources '(hgs/helm-c-source-search
-                   hgs/helm-c-source-stars
-                   hgs/helm-c-source-repos)
+  (helm :sources '(hgs/helm-c-source-stars
+                   hgs/helm-c-source-repos
+                   hgs/helm-c-source-search)
         :candidate-number-limit 9999
         :buffer "*hgs*"
         :prompt "> "))
