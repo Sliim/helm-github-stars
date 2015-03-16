@@ -1,6 +1,7 @@
 ;;; helm-github-stars.el --- Helm integration for your starred repositories on github
 ;;
 ;; Author: Sliim <sliim@mailoo.org>
+;; URL: https://github.com/Sliim/helm-github-stars
 ;; Version: 1.1.1
 ;; Package-Requires: ((helm "1.5.5"))
 ;; Keywords: helm github stars
@@ -51,15 +52,18 @@
 (require 'helm)
 (require 'json)
 
+(defgroup helm-github-stars nil
+  "Helm integration for your starred repositories on github."
+  :group 'helm
+  :prefix "helm-github-stars-")
+
 (defcustom helm-github-stars-username "Sliim"
   "Github's username to fetch starred repositories."
-  :type 'string
-  :group 'helm)
+  :type 'string)
 
 (defcustom helm-github-stars-cache-file (concat user-emacs-directory "hgs-cache")
   "Cache file for starred repositories."
-  :type 'string
-  :group 'helm)
+  :type 'string)
 
 (defvar hgs/github-url "https://github.com/"
   "Github URL for browsing.")
@@ -210,10 +214,10 @@
 (defun helm-github-stars ()
   "Show and Browse your github's stars."
   (interactive)
-  (helm :sources '(hgs/helm-c-source-search
-                   hgs/helm-c-source-stars
+  (helm :sources '(hgs/helm-c-source-stars
                    hgs/helm-c-source-repos
-                   )
+                   hgs/helm-c-source-search)
+        :candidate-number-limit 9999
         :buffer "*hgs*"
         :prompt "> "))
 
