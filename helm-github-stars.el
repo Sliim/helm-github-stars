@@ -3,7 +3,7 @@
 ;; Author: Sliim <sliim@mailoo.org>
 ;; URL: https://github.com/Sliim/helm-github-stars
 ;; Version: 1.1.1
-;; Package-Requires: ((helm "1.5.5"))
+;; Package-Requires: ((helm "1.6.8"))
 ;; Keywords: helm github stars
 
 ;; This file is not part of GNU Emacs.
