@@ -2,7 +2,7 @@
 ;;
 ;; Author: Sliim <sliim@mailoo.org>
 ;; URL: https://github.com/Sliim/helm-github-stars
-;; Version: 1.1.1
+;; Version: 1.1.2
 ;; Package-Requires: ((helm "1.6.8"))
 ;; Keywords: helm github stars
 

@@ -1,3 +1,12 @@
+2015-03-16  Sliim  <sliim@mailoo.org>
+
+	* 1.1.2
+	- Remove s.el dependency
+	- Improve UTF-8 encoding support (thx @xuchunyang)
+	- Updates for Helm 1.6.8
+	- Add helm-github-stars group
+	- Minor improvements..
+
 2013-11-23  Sliim  <sliim@mailoo.org>
 
 	* 1.1.1: Added repository's description
