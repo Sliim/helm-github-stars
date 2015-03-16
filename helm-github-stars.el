@@ -69,34 +69,29 @@
   "Github URL for browsing.")
 
 (defvar hgs/helm-c-source-stars
-  `((name . "Starred repositories")
-    (disable-shortcuts)
-    (init . (lambda ()
-              (with-current-buffer (helm-candidate-buffer 'local)
-                (insert (mapconcat 'identity (hgs/get-github-stars) "\n")))))
-    (candidates-in-buffer)
-    (action . (lambda (candidate)
-                (let ((repo (substring candidate 0 (string-match " - " candidate))))
-                  (browse-url (concat hgs/github-url repo))))))
+  (helm-build-in-buffer-source "Starred repositories"
+    :init (lambda ()
+            (with-current-buffer (helm-candidate-buffer 'local)
+              (insert (mapconcat 'identity (hgs/get-github-stars) "\n"))))
+    :action (lambda (candidate)
+              (let ((repo (substring candidate 0 (string-match " - " candidate))))
+                (browse-url (concat hgs/github-url repo)))))
   "Helm source definition.")
 
 (defvar hgs/helm-c-source-repos
-  `((name . "Your repositories")
-    (disable-shortcuts)
-    (init . (lambda ()
-              (with-current-buffer (helm-candidate-buffer 'local)
-                (insert (mapconcat 'identity (hgs/get-github-repos) "\n")))))
-    (candidates-in-buffer)
-    (action . (lambda (candidate)
-                (let ((repo (substring candidate 0 (string-match " - " candidate))))
-                  (browse-url (concat hgs/github-url repo))))))
+  (helm-build-in-buffer-source "Your repositories"
+    :init (lambda ()
+            (with-current-buffer (helm-candidate-buffer 'local)
+              (insert (mapconcat 'identity (hgs/get-github-repos) "\n"))))
+    :action (lambda (candidate)
+              (let ((repo (substring candidate 0 (string-match " - " candidate))))
+                (browse-url (concat hgs/github-url repo)))))
   "Helm source definition.")
 
 (defvar hgs/helm-c-source-search
-  `((name . "Search on github")
-    (dummy)
-    (action . (lambda (candidate)
-                (browse-url (concat "https://github.com/search?q=" candidate))))))
+  (helm-build-dummy-source "Search on github"
+    :action (lambda (candidate)
+              (browse-url (concat "https://github.com/search?q=" candidate)))))
 
 (defun hgs/read-cache-file ()
   "Read cache file and return list of starred repositories."
