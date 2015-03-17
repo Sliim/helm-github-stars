@@ -63,7 +63,7 @@
 
 (defcustom helm-github-stars-cache-file (concat user-emacs-directory "hgs-cache")
   "Cache file for starred repositories."
-  :type 'string)
+  :type 'file)
 
 (defvar hgs/github-url "https://github.com/"
   "Github URL for browsing.")
