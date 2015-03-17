@@ -1,6 +1,7 @@
 * Helm Github Stars
 
 [[http://melpa.org/#/helm-github-stars][file:http://melpa.org/packages/helm-github-stars-badge.svg]]
+[[http://stable.melpa.org/#/helm-github-stars][file:http://stable.melpa.org/packages/helm-github-stars-badge.svg]]
 
 ~helm-github-stars~ provides capabilities to fetch your starred repositories from github and select one for browsing.
 
