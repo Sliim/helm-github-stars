@@ -51,6 +51,7 @@
 ;; requires
 (require 'helm)
 (require 'json)
+(require 'subr-x)
 
 (defgroup helm-github-stars nil
   "Helm integration for your starred repositories on github."
@@ -65,6 +66,12 @@
   "Cache file for starred repositories."
   :type 'file)
 
+(defcustom helm-github-stars-name-length 30
+  "Length of repo name before truncate.
+When disabled (nil) don't align description."
+  :type  '(choice (const :tag "Disabled" nil)
+                  (integer :tag "Length before truncate")))
+
 (defvar hgs/github-url "https://github.com/"
   "Github URL for browsing.")
 
@@ -72,26 +79,75 @@
   (helm-build-in-buffer-source "Starred repositories"
     :init (lambda ()
             (with-current-buffer (helm-candidate-buffer 'local)
-              (insert (mapconcat 'identity (hgs/get-github-stars) "\n"))))
-    :action (lambda (candidate)
-              (let ((repo (substring candidate 0 (string-match " - " candidate))))
-                (browse-url (concat hgs/github-url repo)))))
+              (insert
+               (mapconcat (if (null helm-github-stars-name-length)
+                              'identity
+                            #'hgs/align-description)
+                          (hgs/get-github-stars)
+                          "\n"))))
+    :action '(("Browse URL" .
+               (lambda (candidate)
+                 (let ((repo-name (if (null helm-github-stars-cache-file)
+                                      (substring candidate 0 (string-match " - " candidate))
+                                    (hgs/get-repo-name candidate (hgs/get-github-stars)))))
+                   (browse-url (concat hgs/github-url repo-name)))))))
   "Helm source definition.")
 
 (defvar hgs/helm-c-source-repos
   (helm-build-in-buffer-source "Your repositories"
     :init (lambda ()
             (with-current-buffer (helm-candidate-buffer 'local)
-              (insert (mapconcat 'identity (hgs/get-github-repos) "\n"))))
-    :action (lambda (candidate)
-              (let ((repo (substring candidate 0 (string-match " - " candidate))))
-                (browse-url (concat hgs/github-url repo)))))
+              (insert
+               (mapconcat (if (null helm-github-stars-name-length)
+                              'identity
+                            #'hgs/align-description)
+                          (hgs/get-github-repos)
+                          "\n"))))
+    :action '(("Browse URL" .
+               (lambda (candidate)
+                 (let ((repo-name (if (null helm-github-stars-cache-file)
+                                      (substring candidate 0 (string-match " - " candidate))
+                                    (hgs/get-repo-name candidate (hgs/get-github-repos)))))
+                   (browse-url (concat hgs/github-url repo-name)))))))
   "Helm source definition.")
 
 (defvar hgs/helm-c-source-search
   (helm-build-dummy-source "Search on github"
     :action (lambda (candidate)
               (browse-url (concat "https://github.com/search?q=" candidate)))))
+
+(defun hgs/align-description (item)
+  "Truncate repo name in ITEM."
+  (let* ((index (string-match" - " item))
+         (name (substring item 0 index))
+         (description (substring item (+ 3 index))))
+    (concat
+     ;; Name
+     (if (> (string-width name) helm-github-stars-name-length)
+         (helm-substring-by-width name helm-github-stars-name-length)
+       (concat name (make-string
+                     (- (+ helm-github-stars-name-length 3)
+                        (string-width name)) ? )))
+     ;; Separator
+     "   "
+     ;; Description
+     description)))
+
+(defun hgs/get-repo-name (candidate stars-or-repos)
+  "calculate repo's name from truncated Helm candidate."
+  (let (rtv)
+    (mapc
+     (lambda (item)
+       (when
+           (and (string-prefix-p
+                 (string-trim-right (substring candidate 0 helm-github-stars-name-length))
+                 item)
+                (string-suffix-p
+                 (substring candidate (+ helm-github-stars-name-length 6))
+                 item))
+         (setq rtv (substring item 0 (string-match " - " item)))))
+     stars-or-repos)
+    rtv))
 
 (defun hgs/read-cache-file ()
   "Read cache file and return list of starred repositories."
