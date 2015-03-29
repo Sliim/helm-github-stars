@@ -118,7 +118,7 @@ When disabled (nil) don't align description."
 
 (defun hgs/align-description (item)
   "Truncate repo name in ITEM."
-  (let* ((index (string-match" - " item))
+  (let* ((index (string-match " - " item))
          (name (substring item 0 index))
          (description (substring item (+ 3 index))))
     (concat
