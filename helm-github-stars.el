@@ -87,7 +87,7 @@ When disabled (nil) don't align description."
                           "\n"))))
     :action '(("Browse URL" .
                (lambda (candidate)
-                 (let ((repo-name (if (null helm-github-stars-cache-file)
+                 (let ((repo-name (if (null helm-github-stars-name-length)
                                       (substring candidate 0 (string-match " - " candidate))
                                     (hgs/get-repo-name candidate (hgs/get-github-stars)))))
                    (browse-url (concat hgs/github-url repo-name)))))))
@@ -105,7 +105,7 @@ When disabled (nil) don't align description."
                           "\n"))))
     :action '(("Browse URL" .
                (lambda (candidate)
-                 (let ((repo-name (if (null helm-github-stars-cache-file)
+                 (let ((repo-name (if (null helm-github-stars-name-length)
                                       (substring candidate 0 (string-match " - " candidate))
                                     (hgs/get-repo-name candidate (hgs/get-github-repos)))))
                    (browse-url (concat hgs/github-url repo-name)))))))
