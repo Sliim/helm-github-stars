@@ -47,6 +47,17 @@ The default cache location is ~$HOME/.emacs.d/hgs-cache~, you can customize this
 (setq helm-github-stars-cache-file "/cache/path")
 #+END_SRC
 
+*** Align repositories's description
+For a clean look, you can align repositories's description by customize
+~helm-github-stars-name-length~, for example:
+#+BEGIN_SRC elisp
+(setq helm-github-stars-name-length 30)
+#+END_SRC
+
+Its defualt vaule is ~nil~ becuase when you have two or more repositories with
+very similar name and description, you may open the wrong URL. Though, in
+practice, that rarely happens.
+
 ** Run tests
 Move into repository's root directory and run:
 #+BEGIN_SRC shell

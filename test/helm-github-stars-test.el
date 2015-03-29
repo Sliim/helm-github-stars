@@ -114,4 +114,27 @@
    (f-write-text hgs-test/cache-string 'utf-8 cache-test-file)
    (should (not (helm-github-stars-fetch)))))
 
+(ert-deftest hgs/align-description-test ()
+  (let ((helm-github-stars-name-length 7)
+        (repo1 "repo/a - description")
+        (repo2 "repo/bb - description")
+        (repo3 "repo/ccc - description")
+        (repo4 "repo/dddd - description"))
+    (should (string-equal (hgs/align-description repo1) "repo/a       description"))
+    (should (string-equal (hgs/align-description repo2) "repo/bb      description"))
+    (should (string-equal (hgs/align-description repo3) "repo/cc...   description"))
+    (should (string-equal (hgs/align-description repo4) "repo/dd...   description"))))
+
+(ert-deftest hgs/get-repo-name-test ()
+  (let* ((helm-github-stars-name-length 7)
+         (repo1 "repo/a - description")
+         (repo2 "repo/bb - description")
+         (repo3 "repo/ccc - description")
+         (repo4 "repo/dddd - description")
+         (repos (vector repo1 repo2 repo3 repo4)))
+    (should (string-equal "repo/a"    (hgs/get-repo-name (hgs/align-description repo1) repos)))
+    (should (string-equal "repo/bb"   (hgs/get-repo-name (hgs/align-description repo2) repos)))
+    (should (string-equal "repo/ccc"  (hgs/get-repo-name (hgs/align-description repo3) repos)))
+    (should (string-equal "repo/dddd" (hgs/get-repo-name (hgs/align-description repo4) repos)))))
+
 ;;; helm-github-stars-test.el ends here
