@@ -40,6 +40,7 @@
   "Test file for cache tests.")
 
 (require 'f)
+(require 'helm-utils)                   ; for `helm-substring-by-width' function
 (require 'helm-github-stars
          (expand-file-name "helm-github-stars.el" root-dir))
 
