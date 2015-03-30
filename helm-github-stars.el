@@ -62,6 +62,30 @@
   "Github's username to fetch starred repositories."
   :type 'string)
 
+(defcustom helm-github-stars-token nil
+  "Access token to use for private repositories.
+
+To generate an access token:
+  1. Visit the page https://github.com/settings/tokens/new and
+     login to github (if asked).
+  2. Give the token any name you want (helm-github-stars, for instance).
+  3. The only permission we need is \"repo\", so unmark
+     all others.
+  4. Click on \"Generate Token\", copy the generated token, and
+     save it to this variable by writing
+         (setq helm-github-stars-token TOKEN)
+     somewhere in your configuration and evaluating it (or just
+     restart emacs).
+
+DISCLAIMER
+When you save this variable, DON'T WRITE IT ANYWHERE PUBLIC. This
+token grants (very) limited access to your account.
+END DISCLAIMER
+
+when disabled (nil) don't use private repositories."
+  :type '(choice (string :tag "Token")
+                 (const :tag "Disable" nil)))
+
 (defcustom helm-github-stars-cache-file (concat user-emacs-directory "hgs-cache")
   "Cache file for starred repositories."
   :type 'file)
@@ -108,6 +132,24 @@ When disabled (nil) don't align description."
                  (let ((repo-name (if (null helm-github-stars-name-length)
                                       (substring candidate 0 (string-match " - " candidate))
                                     (hgs/get-repo-name candidate (hgs/get-github-repos)))))
+                   (browse-url (concat hgs/github-url repo-name)))))))
+  "Helm source definition.")
+
+(defvar hgs/helm-c-source-private-repos
+  (helm-build-in-buffer-source "Your private repositories"
+    :init (lambda ()
+            (with-current-buffer (helm-candidate-buffer 'local)
+              (insert
+               (mapconcat (if (null helm-github-stars-name-length)
+                              'identity
+                            #'hgs/align-description)
+                          (hgs/get-github-private-repos)
+                          "\n"))))
+    :action '(("Browse URL" .
+               (lambda (candidate)
+                 (let ((repo-name (if (null helm-github-stars-name-length)
+                                      (substring candidate 0 (string-match " - " candidate))
+                                    (hgs/get-repo-name candidate (hgs/get-github-private-repos)))))
                    (browse-url (concat hgs/github-url repo-name)))))))
   "Helm source definition.")
 
@@ -177,6 +219,7 @@ When disabled (nil) don't align description."
   "Generate or regenerate cache file if already exists."
   (let ((stars-list [])
         (repos-list [])
+        (private-repos-list [])
         (cache-hash-table (make-hash-table :test 'equal)))
     ;; Fetch user's starred repositories
     (let ((next-request t)
@@ -199,6 +242,18 @@ When disabled (nil) don't align description."
               (setq repos-list (vconcat repos-list response))
               (setq current-page (1+ current-page)))))))
 
+    ;; Fetch user's private repositories
+    (when helm-github-stars-token
+      (mapc (lambda (item)
+              (setq private-repos-list
+                    (vconcat private-repos-list
+                             (vector (concat
+                                      (cdr (assoc 'full_name item))
+                                      " - "
+                                      (cdr (assoc 'description item)))))))
+            (hgs/request-github-private-repos))
+      (puthash '"private-repos" private-repos-list cache-hash-table))
+
     (puthash '"stars" stars-list cache-hash-table)
     (puthash '"repos" repos-list cache-hash-table)
     (hgs/write-cache-file cache-hash-table)))
@@ -216,6 +271,13 @@ When disabled (nil) don't align description."
                               helm-github-stars-username
                               "/repos?per_page=100&page="
                               (number-to-string page))))
+
+(defun hgs/request-github-private-repos ()
+  "Request Github API user's private repositories and return JSON response."
+  (let ((url-request-extra-headers `(("Authorization" .
+                                      ,(format "token %s" helm-github-stars-token)))))
+    (json-read-from-string
+     (hgs/request-github "https://api.github.com/user/repos?type=private"))))
 
 (defun hgs/request-github (url)
   "Request Github URL and return response."
@@ -255,6 +317,12 @@ When disabled (nil) don't align description."
     (hgs/generate-cache-file))
   (gethash "repos" (hgs/read-cache-file)))
 
+(defun hgs/get-github-private-repos ()
+  "Get user's private repositories."
+  (when (not (hgs/cache-file-exists))
+    (hgs/generate-cache-file))
+  (gethash "private-repos" (hgs/read-cache-file)))
+
 (defun helm-github-stars-fetch ()
   "Remove cache file before calling helm-github-stars."
   (interactive)
@@ -265,8 +333,10 @@ When disabled (nil) don't align description."
 (defun helm-github-stars ()
   "Show and Browse your github's stars."
   (interactive)
-  (helm :sources '(hgs/helm-c-source-stars
+  (helm :sources `(hgs/helm-c-source-stars
                    hgs/helm-c-source-repos
+                   ,(when helm-github-stars-token
+                      hgs/helm-c-source-private-repos)
                    hgs/helm-c-source-search)
         :candidate-number-limit 9999
         :buffer "*hgs*"
