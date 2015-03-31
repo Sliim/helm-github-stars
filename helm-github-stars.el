@@ -99,58 +99,48 @@ When disabled (nil) don't align description."
 (defvar hgs/github-url "https://github.com/"
   "Github URL for browsing.")
 
+(defun helm-github-stars-source-init (method)
+  "Helm source initialization.
+
+METHOD is a funcall symbol, call it for a list of stars, repos or private repos."
+  (lexical-let ((method method))
+    (lambda ()
+      (with-current-buffer (helm-candidate-buffer 'local)
+        (insert
+         (mapconcat (if (null helm-github-stars-name-length)
+                        'identity
+                      #'hgs/align-description)
+                    (funcall method)
+                    "\n"))))))
+
+(defun helm-github-stars-source-action (method)
+  "Helm source action.
+
+METHOD is a funcall symbol, call it for a list of stars, repos or private repos."
+  `(("Browse URL" .
+     ,(lexical-let ((method method))
+        (lambda (candidate)
+          (let ((repo-name (if (null helm-github-stars-name-length)
+                               (substring candidate 0 (string-match " - " candidate))
+                             (hgs/get-repo-name candidate (funcall method)))))
+            (browse-url (concat hgs/github-url repo-name))))))))
+
 (defvar hgs/helm-c-source-stars
   (helm-build-in-buffer-source "Starred repositories"
-    :init (lambda ()
-            (with-current-buffer (helm-candidate-buffer 'local)
-              (insert
-               (mapconcat (if (null helm-github-stars-name-length)
-                              'identity
-                            #'hgs/align-description)
-                          (hgs/get-github-stars)
-                          "\n"))))
-    :action '(("Browse URL" .
-               (lambda (candidate)
-                 (let ((repo-name (if (null helm-github-stars-name-length)
-                                      (substring candidate 0 (string-match " - " candidate))
-                                    (hgs/get-repo-name candidate (hgs/get-github-stars)))))
-                   (browse-url (concat hgs/github-url repo-name)))))))
+    :init (helm-github-stars-source-init 'hgs/get-github-stars)
+    :action (helm-github-stars-source-action 'hgs/get-github-stars))
   "Helm source definition.")
 
 (defvar hgs/helm-c-source-repos
   (helm-build-in-buffer-source "Your repositories"
-    :init (lambda ()
-            (with-current-buffer (helm-candidate-buffer 'local)
-              (insert
-               (mapconcat (if (null helm-github-stars-name-length)
-                              'identity
-                            #'hgs/align-description)
-                          (hgs/get-github-repos)
-                          "\n"))))
-    :action '(("Browse URL" .
-               (lambda (candidate)
-                 (let ((repo-name (if (null helm-github-stars-name-length)
-                                      (substring candidate 0 (string-match " - " candidate))
-                                    (hgs/get-repo-name candidate (hgs/get-github-repos)))))
-                   (browse-url (concat hgs/github-url repo-name)))))))
+    :init (helm-github-stars-source-init 'hgs/get-github-repos)
+    :action (helm-github-stars-source-action 'hgs/get-github-repos))
   "Helm source definition.")
 
 (defvar hgs/helm-c-source-private-repos
   (helm-build-in-buffer-source "Your private repositories"
-    :init (lambda ()
-            (with-current-buffer (helm-candidate-buffer 'local)
-              (insert
-               (mapconcat (if (null helm-github-stars-name-length)
-                              'identity
-                            #'hgs/align-description)
-                          (hgs/get-github-private-repos)
-                          "\n"))))
-    :action '(("Browse URL" .
-               (lambda (candidate)
-                 (let ((repo-name (if (null helm-github-stars-name-length)
-                                      (substring candidate 0 (string-match " - " candidate))
-                                    (hgs/get-repo-name candidate (hgs/get-github-private-repos)))))
-                   (browse-url (concat hgs/github-url repo-name)))))))
+    :init (helm-github-stars-source-init 'hgs/get-github-private-repos)
+    :action (helm-github-stars-source-action 'hgs/get-github-private-repos))
   "Helm source definition.")
 
 (defvar hgs/helm-c-source-search
