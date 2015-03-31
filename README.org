@@ -55,7 +55,7 @@ For a clean look, you can align repositories's description by customize
 (setq helm-github-stars-name-length 30)
 #+END_SRC
 
-Its defualt vaule is ~nil~ becuase when you have two or more repositories with
+Its default value is ~nil~ because when you have two or more repositories with
 very similar name and description, you may open the wrong URL. Though, in
 practice, that rarely happens.
 
