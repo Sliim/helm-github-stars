@@ -52,6 +52,7 @@
 (require 'helm)
 (require 'json)
 (require 'subr-x)
+(eval-when-compile (require 'cl))
 
 (defgroup helm-github-stars nil
   "Helm integration for your starred repositories on github."
