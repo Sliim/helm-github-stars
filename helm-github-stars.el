@@ -63,7 +63,10 @@
   :type 'string)
 
 (defcustom helm-github-stars-token nil
-  "Access token to use for private repositories.
+  "Access token to use for your repositories and your starred repositories.
+
+If you don't have or don't want to show your private repositories, you don't
+need access token at all.
 
 To generate an access token:
   1. Visit the page https://github.com/settings/tokens/new and
@@ -82,7 +85,7 @@ When you save this variable, DON'T WRITE IT ANYWHERE PUBLIC. This
 token grants (very) limited access to your account.
 END DISCLAIMER
 
-when disabled (nil) don't use private repositories."
+when disabled (nil) don't use Github token."
   :type '(choice (string :tag "Token")
                  (const :tag "Disable" nil)))
 
@@ -102,7 +105,7 @@ When disabled (nil) don't align description."
 (defun helm-github-stars-source-init (method)
   "Helm source initialization.
 
-METHOD is a funcall symbol, call it for a list of stars, repos or private repos."
+METHOD is a funcall symbol, call it for a list of stars and repos."
   (lexical-let ((method method))
     (lambda ()
       (with-current-buffer (helm-candidate-buffer 'local)
@@ -116,7 +119,7 @@ METHOD is a funcall symbol, call it for a list of stars, repos or private repos.
 (defun helm-github-stars-source-action (method)
   "Helm source action.
 
-METHOD is a funcall symbol, call it for a list of stars, repos or private repos."
+METHOD is a funcall symbol, call it for a list of stars and repos."
   `(("Browse URL" .
      ,(lexical-let ((method method))
         (lambda (candidate)
@@ -135,12 +138,6 @@ METHOD is a funcall symbol, call it for a list of stars, repos or private repos.
   (helm-build-in-buffer-source "Your repositories"
     :init (helm-github-stars-source-init 'hgs/get-github-repos)
     :action (helm-github-stars-source-action 'hgs/get-github-repos))
-  "Helm source definition.")
-
-(defvar hgs/helm-c-source-private-repos
-  (helm-build-in-buffer-source "Your private repositories"
-    :init (helm-github-stars-source-init 'hgs/get-github-private-repos)
-    :action (helm-github-stars-source-action 'hgs/get-github-private-repos))
   "Helm source definition.")
 
 (defvar hgs/helm-c-source-search
@@ -209,40 +206,47 @@ METHOD is a funcall symbol, call it for a list of stars, repos or private repos.
   "Generate or regenerate cache file if already exists."
   (let ((stars-list [])
         (repos-list [])
-        (private-repos-list [])
         (cache-hash-table (make-hash-table :test 'equal)))
-    ;; Fetch user's starred repositories
-    (let ((next-request t)
-          (current-page 1))
-      (while next-request
-        (let ((response (hgs/parse-github-response (hgs/request-github-stars current-page))))
-          (if (= 0 (length response))
-              (setq next-request nil)
-            (progn
-              (setq stars-list (vconcat stars-list response))
-              (setq current-page (1+ current-page)))))))
-    ;; Fetch user's repositories
-    (let ((next-request t)
-          (current-page 1))
-      (while next-request
-        (let ((response (hgs/parse-github-response (hgs/request-github-repos current-page))))
-          (if (= 0 (length response))
-              (setq next-request nil)
-            (progn
-              (setq repos-list (vconcat repos-list response))
-              (setq current-page (1+ current-page)))))))
-
-    ;; Fetch user's private repositories
-    (when helm-github-stars-token
-      (mapc (lambda (item)
-              (setq private-repos-list
-                    (vconcat private-repos-list
-                             (vector (concat
-                                      (cdr (assoc 'full_name item))
-                                      " - "
-                                      (cdr (assoc 'description item)))))))
-            (hgs/request-github-private-repos))
-      (puthash '"private-repos" private-repos-list cache-hash-table))
+    (if helm-github-stars-token
+        (progn
+          ;; Fetch user's starred repositories
+          (mapc (lambda (item)
+                  (setq stars-list
+                        (vconcat stars-list
+                                 (vector (concat
+                                          (cdr (assoc 'full_name item))
+                                          " - "
+                                          (cdr (assoc 'description item)))))))
+                (hgs/request-github-stars-by-token))
+          ;; Fetch user's repositories (inlucding private repos, if possible)
+          (mapc (lambda (item)
+                  (setq repos-list
+                        (vconcat repos-list
+                                 (vector (concat
+                                          (cdr (assoc 'full_name item))
+                                          " - "
+                                          (cdr (assoc 'description item)))))))
+                (hgs/request-github-repos-by-token)))
+      ;; Fetch user's starred repositories
+      (let ((next-request t)
+            (current-page 1))
+        (while next-request
+          (let ((response (hgs/parse-github-response (hgs/request-github-stars current-page))))
+            (if (= 0 (length response))
+                (setq next-request nil)
+              (progn
+                (setq stars-list (vconcat stars-list response))
+                (setq current-page (1+ current-page)))))))
+      ;; Fetch user's repositories
+      (let ((next-request t)
+            (current-page 1))
+        (while next-request
+          (let ((response (hgs/parse-github-response (hgs/request-github-repos current-page))))
+            (if (= 0 (length response))
+                (setq next-request nil)
+              (progn
+                (setq repos-list (vconcat repos-list response))
+                (setq current-page (1+ current-page))))))))
 
     (puthash '"stars" stars-list cache-hash-table)
     (puthash '"repos" repos-list cache-hash-table)
@@ -262,12 +266,19 @@ METHOD is a funcall symbol, call it for a list of stars, repos or private repos.
                               "/repos?per_page=100&page="
                               (number-to-string page))))
 
-(defun hgs/request-github-private-repos ()
-  "Request Github API user's private repositories and return JSON response."
+(defun hgs/request-github-repos-by-token ()
+  "Request Github API user's repositories and return JSON response."
   (let ((url-request-extra-headers `(("Authorization" .
                                       ,(format "token %s" helm-github-stars-token)))))
     (json-read-from-string
-     (hgs/request-github "https://api.github.com/user/repos?type=private"))))
+     (hgs/request-github "https://api.github.com/user/repos"))))
+
+(defun hgs/request-github-stars-by-token ()
+  "Request Github API user's repositories and return JSON response."
+  (let ((url-request-extra-headers `(("Authorization" .
+                                      ,(format "token %s" helm-github-stars-token)))))
+    (json-read-from-string
+     (hgs/request-github "https://api.github.com/user/starred"))))
 
 (defun hgs/request-github (url)
   "Request Github URL and return response."
@@ -307,12 +318,6 @@ METHOD is a funcall symbol, call it for a list of stars, repos or private repos.
     (hgs/generate-cache-file))
   (gethash "repos" (hgs/read-cache-file)))
 
-(defun hgs/get-github-private-repos ()
-  "Get user's private repositories."
-  (when (not (hgs/cache-file-exists))
-    (hgs/generate-cache-file))
-  (gethash "private-repos" (hgs/read-cache-file)))
-
 (defun helm-github-stars-fetch ()
   "Remove cache file before calling helm-github-stars."
   (interactive)
@@ -323,10 +328,8 @@ METHOD is a funcall symbol, call it for a list of stars, repos or private repos.
 (defun helm-github-stars ()
   "Show and Browse your github's stars."
   (interactive)
-  (helm :sources `(hgs/helm-c-source-stars
+  (helm :sources '(hgs/helm-c-source-stars
                    hgs/helm-c-source-repos
-                   ,(when helm-github-stars-token
-                      hgs/helm-c-source-private-repos)
                    hgs/helm-c-source-search)
         :candidate-number-limit 9999
         :buffer "*hgs*"
