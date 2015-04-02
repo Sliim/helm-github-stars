@@ -8,7 +8,7 @@
 
 ** Requirements
   - Emacs >= 24.4
-  - [[http://melpa.org/#/helm][Helm] >= 1.6.8
+  - [[http://melpa.org/#/helm][Helm]] >= 1.6.8
 
 ** Installation
 *** MELPA
