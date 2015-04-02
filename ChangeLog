@@ -1,3 +1,10 @@
+2015-04-02  xuchunyang  <xuchunyang56@gmail.com>
+	* 1.2.0
+	- Now requires Emacs 24.4
+	- Provides possibility to use a github token with `helm-github-stars-token`
+	- Support for private repository
+	- Added option `helm-github-stars-name-length` for description alignement
+
 2015-03-16  Sliim  <sliim@mailoo.org>
 
 	* 1.1.2

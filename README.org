@@ -7,7 +7,8 @@
 ~helm-github-stars~ provides capabilities to fetch your starred repositories from github and select one for browsing.
 
 ** Requirements
-  - Helm (https://github.com/emacs-helm/helm)
+  - Emacs >= 24.4
+  - [[http://melpa.org/#/helm][Helm] >= 1.6.8
 
 ** Installation
 *** MELPA

@@ -1,33 +1,13 @@
 ;;; helm-github-stars.el --- Helm integration for your starred repositories on github
 ;;
 ;; Author: Sliim <sliim@mailoo.org>
+;;    xuchunyang <xuchunyang56@gmail.com>
 ;; URL: https://github.com/Sliim/helm-github-stars
-;; Version: 1.1.2
+;; Version: 1.2.0
 ;; Package-Requires: ((helm "1.6.8"))
 ;; Keywords: helm github stars
 
 ;; This file is not part of GNU Emacs.
-
-;;; Commentary:
-
-;; helm-github-stars provides capabilities to show and open
-;; starred repository from github.
-;;
-;; Usage:
-;;  Copy helm-github-stars.el in your load-path and put this in your ~/.emacs.d/init.el:
-;;  (require 'helm-github-stars)
-;;  ;; Setup your github username:
-;;  (setq helm-github-stars-username "USERNAME")
-;;
-;;  Type M-x helm-github-stars to show starred repositories.
-;;
-;; At the first execution of ~helm-github-stars~, list of repositories is
-;; fetched from github and saved into a cache file.
-;; Default cache location: ~$HOME/.emacs.d/hgs-cache~.
-;; To refresh cache and open helm interface run ~helm-github-stars-fetch~.
-;;
-;; You can customize cache file path:
-;; (setq helm-github-stars-cache-file "/cache/path")
 
 ;;; License:
 
@@ -45,6 +25,44 @@
 ;; along with GNU Emacs; see the file COPYING. If not, write to the
 ;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 ;; Boston, MA 02110-1301, USA.
+
+;;; Commentary:
+
+;; helm-github-stars provides capabilities to fetch your starred
+;; repositories from github and select one for browsing.
+;;
+;; Install:
+;;
+;;     M-x package-install helm-github-stars
+;;
+;; Usage:
+;;
+;; Copy helm-github-stars.el in your load-path and put this in your ~/.emacs.d/init.el:
+;;
+;;     (require 'helm-github-stars)
+;;     ;; Setup your github username:
+;;     (setq helm-github-stars-username "USERNAME")
+;;
+;; Type M-x helm-github-stars to show starred repositories.
+;;
+;; At the first execution of ~helm-github-stars~, list of repositories is
+;; fetched from github and saved into a cache file.
+;; Default cache location: ~$HOME/.emacs.d/hgs-cache~.
+;; To refresh cache and open helm interface run ~helm-github-stars-fetch~.
+;;
+;; You can customize cache file path:
+;;
+;;     (setq helm-github-stars-cache-file "/cache/path")
+;;
+;; For a clean look, you can align repositories's description by customizing
+;; helm-github-stars-name-length, for example:
+;;
+;;     (setq helm-github-stars-name-length 30)
+;;
+;; If you want to be able to show your private repositories, customize
+;; helm-github-stars-token:
+;;
+;;     (setq helm-github-stars-token "TOKEN")
 
 ;;; Code:
 

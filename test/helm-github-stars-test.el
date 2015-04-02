@@ -1,19 +1,9 @@
 ;;; helm-github-stars-test.el --- Test suite for helm-github-stars.
 ;;
 ;; Author: Sliim <sliim@mailoo.org>
-;; Version: 1.1.1
+;; Version: 1.2.0
 
 ;; This file is not part of GNU Emacs.
-
-;;; Commentary:
-
-;; Test suite for helm-github-stars.
-;;
-;; To run tests, install dependencies with Cask:
-;; $ cask install
-;;
-;; And execute ert-runner:
-;; $ cask exec ert-runner
 
 ;;; License:
 
@@ -31,6 +21,18 @@
 ;; along with GNU Emacs; see the file COPYING. If not, write to the
 ;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 ;; Boston, MA 02110-1301, USA.
+
+;;; Commentary:
+
+;; Test suite for helm-github-stars.
+;;
+;; To run tests, install dependencies with Cask:
+;;
+;;     $ cask install
+;;
+;; And execute ert-runner:
+;;
+;;     $ cask exec ert-runner
 
 ;;; Code:
 
