@@ -52,6 +52,7 @@
 (require 'helm)
 (require 'json)
 (require 'subr-x)
+(eval-when-compile (require 'cl))
 
 (defgroup helm-github-stars nil
   "Helm integration for your starred repositories on github."
@@ -61,6 +62,33 @@
 (defcustom helm-github-stars-username "Sliim"
   "Github's username to fetch starred repositories."
   :type 'string)
+
+(defcustom helm-github-stars-token nil
+  "Access token to use for your repositories and your starred repositories.
+
+If you don't have or don't want to show your private repositories, you don't
+need access token at all.
+
+To generate an access token:
+  1. Visit the page https://github.com/settings/tokens/new and
+     login to github (if asked).
+  2. Give the token any name you want (helm-github-stars, for instance).
+  3. The only permission we need is \"repo\", so unmark
+     all others.
+  4. Click on \"Generate Token\", copy the generated token, and
+     save it to this variable by writing
+         (setq helm-github-stars-token TOKEN)
+     somewhere in your configuration and evaluating it (or just
+     restart emacs).
+
+DISCLAIMER
+When you save this variable, DON'T WRITE IT ANYWHERE PUBLIC. This
+token grants (very) limited access to your account.
+END DISCLAIMER
+
+when disabled (nil) don't use Github token."
+  :type '(choice (string :tag "Token")
+                 (const :tag "Disable" nil)))
 
 (defcustom helm-github-stars-cache-file (concat user-emacs-directory "hgs-cache")
   "Cache file for starred repositories."
@@ -75,40 +103,42 @@ When disabled (nil) don't align description."
 (defvar hgs/github-url "https://github.com/"
   "Github URL for browsing.")
 
+(defun helm-github-stars-source-init (method)
+  "Helm source initialization.
+
+METHOD is a funcall symbol, call it for a list of stars and repos."
+  (lexical-let ((method method))
+    (lambda ()
+      (with-current-buffer (helm-candidate-buffer 'local)
+        (insert
+         (mapconcat (if (null helm-github-stars-name-length)
+                        'identity
+                      #'hgs/align-description)
+                    (funcall method)
+                    "\n"))))))
+
+(defun helm-github-stars-source-action (method)
+  "Helm source action.
+
+METHOD is a funcall symbol, call it for a list of stars and repos."
+  `(("Browse URL" .
+     ,(lexical-let ((method method))
+        (lambda (candidate)
+          (let ((repo-name (if (null helm-github-stars-name-length)
+                               (substring candidate 0 (string-match " - " candidate))
+                             (hgs/get-repo-name candidate (funcall method)))))
+            (browse-url (concat hgs/github-url repo-name))))))))
+
 (defvar hgs/helm-c-source-stars
   (helm-build-in-buffer-source "Starred repositories"
-    :init (lambda ()
-            (with-current-buffer (helm-candidate-buffer 'local)
-              (insert
-               (mapconcat (if (null helm-github-stars-name-length)
-                              'identity
-                            #'hgs/align-description)
-                          (hgs/get-github-stars)
-                          "\n"))))
-    :action '(("Browse URL" .
-               (lambda (candidate)
-                 (let ((repo-name (if (null helm-github-stars-name-length)
-                                      (substring candidate 0 (string-match " - " candidate))
-                                    (hgs/get-repo-name candidate (hgs/get-github-stars)))))
-                   (browse-url (concat hgs/github-url repo-name)))))))
+    :init (helm-github-stars-source-init 'hgs/get-github-stars)
+    :action (helm-github-stars-source-action 'hgs/get-github-stars))
   "Helm source definition.")
 
 (defvar hgs/helm-c-source-repos
   (helm-build-in-buffer-source "Your repositories"
-    :init (lambda ()
-            (with-current-buffer (helm-candidate-buffer 'local)
-              (insert
-               (mapconcat (if (null helm-github-stars-name-length)
-                              'identity
-                            #'hgs/align-description)
-                          (hgs/get-github-repos)
-                          "\n"))))
-    :action '(("Browse URL" .
-               (lambda (candidate)
-                 (let ((repo-name (if (null helm-github-stars-name-length)
-                                      (substring candidate 0 (string-match " - " candidate))
-                                    (hgs/get-repo-name candidate (hgs/get-github-repos)))))
-                   (browse-url (concat hgs/github-url repo-name)))))))
+    :init (helm-github-stars-source-init 'hgs/get-github-repos)
+    :action (helm-github-stars-source-action 'hgs/get-github-repos))
   "Helm source definition.")
 
 (defvar hgs/helm-c-source-search
@@ -182,7 +212,11 @@ When disabled (nil) don't align description."
     (let ((next-request t)
           (current-page 1))
       (while next-request
-        (let ((response (hgs/parse-github-response (hgs/request-github-stars current-page))))
+        (let ((response (hgs/parse-github-response
+                         (funcall (if helm-github-stars-token
+                                      'hgs/request-github-stars-by-token
+                                    'hgs/request-github-stars)
+                                  current-page))))
           (if (= 0 (length response))
               (setq next-request nil)
             (progn
@@ -192,7 +226,11 @@ When disabled (nil) don't align description."
     (let ((next-request t)
           (current-page 1))
       (while next-request
-        (let ((response (hgs/parse-github-response (hgs/request-github-repos current-page))))
+        (let ((response (hgs/parse-github-response
+                         (funcall (if helm-github-stars-token
+                                      'hgs/request-github-repos-by-token
+                                    'hgs/request-github-repos)
+                                  current-page))))
           (if (= 0 (length response))
               (setq next-request nil)
             (progn
@@ -216,6 +254,22 @@ When disabled (nil) don't align description."
                               helm-github-stars-username
                               "/repos?per_page=100&page="
                               (number-to-string page))))
+
+(defun hgs/request-github-repos-by-token (page)
+  "Request Github API user's repositories and return response."
+  (let ((url-request-extra-headers `(("Authorization" .
+                                      ,(format "token %s" helm-github-stars-token)))))
+    (hgs/request-github (concat
+                         "https://api.github.com/user/repos?per_page=100&page="
+                         (number-to-string page)))))
+
+(defun hgs/request-github-stars-by-token (page)
+  "Request Github API user's repositories and return response."
+  (let ((url-request-extra-headers `(("Authorization" .
+                                      ,(format "token %s" helm-github-stars-token)))))
+    (hgs/request-github (concat
+                         "https://api.github.com/user/starred?per_page=100&page="
+                         (number-to-string page)))))
 
 (defun hgs/request-github (url)
   "Request Github URL and return response."
