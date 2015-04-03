@@ -112,7 +112,7 @@ when disabled (nil) don't use Github token."
   "Cache file for starred repositories."
   :type 'file)
 
-(defcustom helm-github-stars-name-length nil
+(defcustom helm-github-stars-name-length 30
   "Length of repo name before truncate.
 When disabled (nil) don't align description."
   :type  '(choice (const :tag "Disabled" nil)
