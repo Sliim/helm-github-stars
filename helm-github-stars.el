@@ -121,49 +121,6 @@ When disabled (nil) don't align description."
 (defvar hgs/github-url "https://github.com/"
   "Github URL for browsing.")
 
-(defun helm-github-stars-source-init (method)
-  "Helm source initialization.
-
-METHOD is a funcall symbol, call it for a list of stars and repos."
-  (lexical-let ((method method))
-    (lambda ()
-      (with-current-buffer (helm-candidate-buffer 'local)
-        (insert
-         (mapconcat (if (null helm-github-stars-name-length)
-                        'identity
-                      #'hgs/align-description)
-                    (funcall method)
-                    "\n"))))))
-
-(defun helm-github-stars-source-action (method)
-  "Helm source action.
-
-METHOD is a funcall symbol, call it for a list of stars and repos."
-  `(("Browse URL" .
-     ,(lexical-let ((method method))
-        (lambda (candidate)
-          (let ((repo-name (if (null helm-github-stars-name-length)
-                               (substring candidate 0 (string-match " - " candidate))
-                             (hgs/get-repo-name candidate (funcall method)))))
-            (browse-url (concat hgs/github-url repo-name))))))))
-
-(defvar hgs/helm-c-source-stars
-  (helm-build-in-buffer-source "Starred repositories"
-    :init (helm-github-stars-source-init 'hgs/get-github-stars)
-    :action (helm-github-stars-source-action 'hgs/get-github-stars))
-  "Helm source definition.")
-
-(defvar hgs/helm-c-source-repos
-  (helm-build-in-buffer-source "Your repositories"
-    :init (helm-github-stars-source-init 'hgs/get-github-repos)
-    :action (helm-github-stars-source-action 'hgs/get-github-repos))
-  "Helm source definition.")
-
-(defvar hgs/helm-c-source-search
-  (helm-build-dummy-source "Search on github"
-    :action (lambda (candidate)
-              (browse-url (concat "https://github.com/search?q=" candidate)))))
-
 (defun hgs/align-description (item)
   "Truncate repo name in ITEM."
   (let* ((index (string-match " - " item))
@@ -180,22 +137,6 @@ METHOD is a funcall symbol, call it for a list of stars and repos."
      "   "
      ;; Description
      description)))
-
-(defun hgs/get-repo-name (candidate stars-or-repos)
-  "calculate repo's name from truncated Helm candidate."
-  (let (rtv)
-    (mapc
-     (lambda (item)
-       (when
-           (and (string-prefix-p
-                 (string-trim-right (substring candidate 0 helm-github-stars-name-length))
-                 item)
-                (string-suffix-p
-                 (substring candidate (+ helm-github-stars-name-length 6))
-                 item))
-         (setq rtv (substring item 0 (string-match " - " item)))))
-     stars-or-repos)
-    rtv))
 
 (defun hgs/read-cache-file ()
   "Read cache file and return list of starred repositories."
@@ -326,6 +267,42 @@ METHOD is a funcall symbol, call it for a list of stars and repos."
   (when (not (hgs/cache-file-exists))
     (hgs/generate-cache-file))
   (gethash "repos" (hgs/read-cache-file)))
+
+(defun hgs/helm-candidates (method)
+  "Return a function to collect Helm source candidates.
+
+METHOD is a funcall symbol, call it for a list of stars and repos."
+  (lexical-let ((method method))
+    (lambda ()
+      (if helm-github-stars-name-length
+          (mapcar
+           (lambda (item) (cons (hgs/align-description item) item))
+           (funcall method))
+        (append (funcall method) '())))))
+
+(defun hgs/helm-action-browse-url (candidate)
+  (let ((repo-name (substring candidate 0 (string-match " - " candidate))))
+    (browse-url (concat hgs/github-url repo-name))))
+
+(defun hgs/helm-action-show-url (candidate)
+  (message candidate))
+
+(defvar hgs/helm-c-source-stars
+  `((name . "Starred repositories")
+    (candidates . ,(hgs/helm-candidates 'hgs/get-github-stars))
+    (action . (("Browse URL" . hgs/helm-action-browse-url)
+               ("Show URL" . hgs/helm-action-show-url)))))
+
+(defvar hgs/helm-c-source-repos
+  `((name . "Your repositories")
+    (candidates . ,(hgs/helm-candidates 'hgs/get-github-repos))
+    (action . (("Browse URL" . hgs/helm-action-browse-url)
+               ("Show URL" . hgs/helm-action-show-url)))))
+
+(defvar hgs/helm-c-source-search
+  (helm-build-dummy-source "Search on github"
+    :action (lambda (candidate)
+              (browse-url (concat "https://github.com/search?q=" candidate)))))
 
 (defun helm-github-stars-fetch ()
   "Remove cache file before calling helm-github-stars."
