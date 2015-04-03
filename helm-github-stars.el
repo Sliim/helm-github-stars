@@ -341,7 +341,7 @@ METHOD is a funcall symbol, call it for a list of stars and repos."
                    hgs/helm-c-source-repos
                    hgs/helm-c-source-search)
         :candidate-number-limit 9999
-        :buffer "*hgs*"
+        :buffer "*helm github stars*"
         :prompt "> "))
 
 (provide 'helm-github-stars)
