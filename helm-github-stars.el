@@ -128,35 +128,28 @@ METHOD is a funcall symbol, call it for a list of stars and repos."
   (lexical-let ((method method))
     (lambda ()
       (with-current-buffer (helm-candidate-buffer 'local)
-        (insert
-         (mapconcat (if (null helm-github-stars-name-length)
-                        'identity
-                      #'hgs/align-description)
-                    (funcall method)
-                    "\n"))))))
+        (insert (mapconcat 'identity (funcall method) "\n"))))))
 
-(defun helm-github-stars-source-action (method)
-  "Helm source action.
-
-METHOD is a funcall symbol, call it for a list of stars and repos."
-  `(("Browse URL" .
-     ,(lexical-let ((method method))
-        (lambda (candidate)
-          (let ((repo-name (if (null helm-github-stars-name-length)
-                               (substring candidate 0 (string-match " - " candidate))
-                             (hgs/get-repo-name candidate (funcall method)))))
-            (browse-url (concat hgs/github-url repo-name))))))))
+(defvar helm-github-stars-actions
+  (helm-make-actions
+   "Browse URL"
+   (lambda (candidate)
+     (let ((repo-name (substring candidate 0 (string-match " - " candidate))))
+       (browse-url (concat hgs/github-url repo-name))))
+   "Show Repo" 'message))
 
 (defvar hgs/helm-c-source-stars
   (helm-build-in-buffer-source "Starred repositories"
     :init (helm-github-stars-source-init 'hgs/get-github-stars)
-    :action (helm-github-stars-source-action 'hgs/get-github-stars))
+    :real-to-display (lambda (candidate) (hgs/align-description candidate))
+    :action helm-github-stars-actions)
   "Helm source definition.")
 
 (defvar hgs/helm-c-source-repos
   (helm-build-in-buffer-source "Your repositories"
     :init (helm-github-stars-source-init 'hgs/get-github-repos)
-    :action (helm-github-stars-source-action 'hgs/get-github-repos))
+    :real-to-display (lambda (candidate) (hgs/align-description candidate))
+    :action helm-github-stars-actions)
   "Helm source definition.")
 
 (defvar hgs/helm-c-source-search
@@ -180,22 +173,6 @@ METHOD is a funcall symbol, call it for a list of stars and repos."
      "   "
      ;; Description
      description)))
-
-(defun hgs/get-repo-name (candidate stars-or-repos)
-  "calculate repo's name from truncated Helm candidate."
-  (let (rtv)
-    (mapc
-     (lambda (item)
-       (when
-           (and (string-prefix-p
-                 (string-trim-right (substring candidate 0 helm-github-stars-name-length))
-                 item)
-                (string-suffix-p
-                 (substring candidate (+ helm-github-stars-name-length 6))
-                 item))
-         (setq rtv (substring item 0 (string-match " - " item)))))
-     stars-or-repos)
-    rtv))
 
 (defun hgs/read-cache-file ()
   "Read cache file and return list of starred repositories."
