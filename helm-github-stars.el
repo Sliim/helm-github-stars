@@ -54,10 +54,11 @@
 ;;
 ;;     (setq helm-github-stars-cache-file "/cache/path")
 ;;
-;; For a clean look, you can align repositories's description by customizing
-;; helm-github-stars-name-length, for example:
+;; For a clean look, repositories's description is aligned by default, you can
+;; customize this behavior via ~helm-github-stars-name-length~, for example,
+;; don't align:
 ;;
-;;     (setq helm-github-stars-name-length 30)
+;;     (setq helm-github-stars-name-length nil)
 ;;
 ;; If you want to be able to show your private repositories, customize
 ;; helm-github-stars-token:
