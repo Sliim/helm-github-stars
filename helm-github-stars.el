@@ -4,7 +4,7 @@
 ;;    xuchunyang <xuchunyang56@gmail.com>
 ;; URL: https://github.com/Sliim/helm-github-stars
 ;; Version: 1.2.0
-;; Package-Requires: ((helm "1.6.8"))
+;; Package-Requires: ((helm "1.6.8") (emacs "24.4"))
 ;; Keywords: helm github stars
 
 ;; This file is not part of GNU Emacs.
