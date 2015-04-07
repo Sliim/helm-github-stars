@@ -51,8 +51,9 @@ The default cache location is ~$HOME/.emacs.d/hgs-cache~, you can customize this
 
 *** Align repositories's description
 For a clean look, repositories's description is aligned by default, you can
-customize this behavior via ~helm-github-stars-name-length~, for example, don't
-align:
+customize this behavior via ~helm-github-stars-name-length~, it's default
+value is ~30~.
+You can disable this by setting ~helm-github-stars-name-length~ to ~nil~:
 #+BEGIN_SRC elisp
 (setq helm-github-stars-name-length nil)
 #+END_SRC

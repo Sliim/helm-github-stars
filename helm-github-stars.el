@@ -45,18 +45,19 @@
 ;;
 ;; Type M-x helm-github-stars to show starred repositories.
 ;;
-;; At the first execution of ~helm-github-stars~, list of repositories is
+;; At the first execution of helm-github-stars, list of repositories is
 ;; fetched from github and saved into a cache file.
-;; Default cache location: ~$HOME/.emacs.d/hgs-cache~.
-;; To refresh cache and open helm interface run ~helm-github-stars-fetch~.
+;; Default cache location: $HOME/.emacs.d/hgs-cache.
+;; To refresh cache and open helm interface run helm-github-stars-fetch.
 ;;
 ;; You can customize cache file path:
 ;;
 ;;     (setq helm-github-stars-cache-file "/cache/path")
 ;;
 ;; For a clean look, repositories's description is aligned by default, you can
-;; customize this behavior via ~helm-github-stars-name-length~, for example,
-;; don't align:
+;; customize this behavior via helm-github-stars-name-length, it's default
+;; value is 30.
+;; You can disable this by setting helm-github-stars-name-length to nil:
 ;;
 ;;     (setq helm-github-stars-name-length nil)
 ;;
