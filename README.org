@@ -49,6 +49,15 @@ The default cache location is ~$HOME/.emacs.d/hgs-cache~, you can customize this
 (setq helm-github-stars-cache-file "/cache/path")
 #+END_SRC
 
+*** Update the cache file automatically
+Besides runing ~helm-github-stars-fetch~ to update the cache file manually, you
+can also do it automatically while runing ~helm-github-stars~ by customizing
+~helm-github-stars-refetch-time~, for example, refresh the cache file once it is
+older than 0.5 days (i.e., 12 hours):
+#+BEGIN_SRC elisp
+(setq helm-github-stars-refetch-time 0.5)
+#+END_SRC
+
 *** Align repositories's description
 For a clean look, repositories's description is aligned by default, you can
 customize this behavior via ~helm-github-stars-name-length~, it's default

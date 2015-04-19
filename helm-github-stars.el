@@ -120,6 +120,12 @@ When disabled (nil) don't align description."
   :type  '(choice (const :tag "Disabled" nil)
                   (integer :tag "Length before truncate")))
 
+(defcustom helm-github-stars-refetch-time nil
+  "Days to refetch cache file.
+When disabled (nil) don't refetch automatically. "
+  :type '(choice (const :tag "Disabled" nil)
+                 (number :tag "Days to refetch cache file")))
+
 (defvar hgs/github-url "https://github.com/"
   "Github URL for browsing.")
 
@@ -199,6 +205,16 @@ METHOD is a funcall symbol, call it for a list of stars and repos."
   "Delete file cache if exists."
   (when (hgs/cache-file-exists)
     (delete-file helm-github-stars-cache-file)))
+
+(defun hgs/clear-cache-file-by-time ()
+  "Delete cache file if it is too old."
+  (when (and (hgs/cache-file-exists) helm-github-stars-refetch-time)
+    (let ((time-since-last-fetch
+           (time-subtract (current-time)
+                          (nth 5 (file-attributes helm-github-stars-cache-file)))))
+      (when (> (time-to-number-of-days time-since-last-fetch)
+               helm-github-stars-refetch-time)
+        (hgs/clear-cache-file)))))
 
 (defun hgs/generate-cache-file ()
   "Generate or regenerate cache file if already exists."
@@ -316,6 +332,7 @@ METHOD is a funcall symbol, call it for a list of stars and repos."
 (defun helm-github-stars ()
   "Show and Browse your github's stars."
   (interactive)
+  (hgs/clear-cache-file-by-time)
   (helm :sources '(hgs/helm-c-source-stars
                    hgs/helm-c-source-repos
                    hgs/helm-c-source-search)
