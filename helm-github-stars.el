@@ -70,6 +70,7 @@
 
 ;; requires
 (require 'helm)
+(require 'helm-utils)
 (require 'json)
 (require 'subr-x)
 (eval-when-compile (require 'cl))
