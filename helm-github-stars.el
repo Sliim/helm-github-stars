@@ -94,7 +94,7 @@ To generate an access token:
   1. Visit the page https://github.com/settings/tokens/new and
      login to github (if asked).
   2. Give the token any name you want (helm-github-stars, for instance).
-  3. The only permission we need is \"repo\", so unmark
+  3. The permission we need is \"repo\" and \"delete_repo\", so unmark
      all others.
   4. Click on \"Generate Token\", copy the generated token, and
      save it to this variable by writing
@@ -138,33 +138,6 @@ METHOD is a funcall symbol, call it for a list of stars and repos."
     (lambda ()
       (with-current-buffer (helm-candidate-buffer 'local)
         (insert (mapconcat 'identity (funcall method) "\n"))))))
-
-(defvar helm-github-stars-actions
-  (helm-make-actions
-   "Browse URL"
-   (lambda (candidate)
-     (let ((repo-name (substring candidate 0 (string-match " - " candidate))))
-       (browse-url (concat hgs/github-url repo-name))))
-   "Show Repo" 'message))
-
-(defvar hgs/helm-c-source-stars
-  (helm-build-in-buffer-source "Starred repositories"
-    :init (helm-github-stars-source-init 'hgs/get-github-stars)
-    :real-to-display (lambda (candidate) (hgs/align-description candidate))
-    :action helm-github-stars-actions)
-  "Helm source definition.")
-
-(defvar hgs/helm-c-source-repos
-  (helm-build-in-buffer-source "Your repositories"
-    :init (helm-github-stars-source-init 'hgs/get-github-repos)
-    :real-to-display (lambda (candidate) (hgs/align-description candidate))
-    :action helm-github-stars-actions)
-  "Helm source definition.")
-
-(defvar hgs/helm-c-source-search
-  (helm-build-dummy-source "Search on github"
-    :action (lambda (candidate)
-              (browse-url (concat "https://github.com/search?q=" candidate)))))
 
 (defun hgs/align-description (item)
   "Truncate repo name in ITEM."
@@ -322,6 +295,72 @@ METHOD is a funcall symbol, call it for a list of stars and repos."
   (when (not (hgs/cache-file-exists))
     (hgs/generate-cache-file))
   (gethash "repos" (hgs/read-cache-file)))
+
+(defun hgs/unstar-or-delete-repo (api repo-name)
+  "Unstar a starred repository or delete a user repository."
+  (unless helm-github-stars-token
+    (error "`helm-github-stars-token' is nil."))
+
+  (let ((url-request-method "DELETE")
+        (url-request-extra-headers
+         `(("Authorization" . ,(format "token %s" helm-github-stars-token)))))
+    (hgs/request-github (concat api repo-name)))
+
+  ;; FIXME: there is no way to modify the cache file
+  ;; (puthash "stars" (delete candidate (gethash "stars" (hgs/read-cache-file)))
+  ;;          (hgs/read-cache-file))
+  ;; (hgs/write-cache-file cache-hash-table)
+  (helm-github-stars-fetch))
+
+(defun hgs/get-repo-name (candidate)
+  (substring candidate 0 (string-match " - " candidate)))
+
+(defvar hgs/helm-stars-actions
+  (helm-make-actions
+   "Browse URL"
+   (lambda (candidate)
+     (browse-url (concat hgs/github-url (hgs/get-repo-name candidate))))
+   "Show URL"
+   (lambda (candidate)
+     (message (concat hgs/github-url (hgs/get-repo-name candidate))))
+   "Unstar"
+   (lambda (candidate)
+     "Unstar a starred repository."
+     (let ((repo-name (hgs/get-repo-name candidate)))
+       (hgs/unstar-or-delete-repo "https://api.github.com/user/starred/" repo-name)))))
+
+(defvar hgs/helm-repos-actions
+  (helm-make-actions
+   "Browse URL"
+   (lambda (candidate)
+     (browse-url (concat hgs/github-url (hgs/get-repo-name candidate))))
+   "Show URL"
+   (lambda (candidate)
+     (message (concat hgs/github-url (hgs/get-repo-name candidate))))
+   "Delete"
+   (lambda (candidate)
+     "Delete a user repository."
+     (let ((repo-name (hgs/get-repo-name candidate)))
+       (hgs/unstar-or-delete-repo "https://api.github.com/repos/" repo-name)))))
+
+(defvar hgs/helm-c-source-stars
+  (helm-build-in-buffer-source "Starred repositories"
+    :init (helm-github-stars-source-init 'hgs/get-github-stars)
+    :real-to-display (lambda (candidate) (hgs/align-description candidate))
+    :action hgs/helm-stars-actions)
+  "Helm source definition.")
+
+(defvar hgs/helm-c-source-repos
+  (helm-build-in-buffer-source "Your repositories"
+    :init (helm-github-stars-source-init 'hgs/get-github-repos)
+    :real-to-display (lambda (candidate) (hgs/align-description candidate))
+    :action hgs/helm-repos-actions)
+  "Helm source definition.")
+
+(defvar hgs/helm-c-source-search
+  (helm-build-dummy-source "Search on github"
+    :action (lambda (candidate)
+              (browse-url (concat "https://github.com/search?q=" candidate)))))
 
 (defun helm-github-stars-fetch ()
   "Remove cache file before calling helm-github-stars."
