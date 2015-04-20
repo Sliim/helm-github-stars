@@ -304,7 +304,11 @@ METHOD is a funcall symbol, call it for a list of stars and repos."
   (let ((url-request-method "DELETE")
         (url-request-extra-headers
          `(("Authorization" . ,(format "token %s" helm-github-stars-token)))))
-    (hgs/request-github (concat api repo-name)))
+    (with-current-buffer (url-retrieve-synchronously (concat api repo-name))
+      (goto-char (point-min))
+      (when (not (string-match "204 No Content" (buffer-string)))
+        (error "Problem unstar or delete repo."))
+      (kill-buffer)))
 
   ;; FIXME: there is no way to modify the cache file
   ;; (puthash "stars" (delete candidate (gethash "stars" (hgs/read-cache-file)))
