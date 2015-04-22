@@ -319,6 +319,28 @@ METHOD is a funcall symbol, call it for a list of stars and repos."
 (defun hgs/get-repo-name (candidate)
   (substring candidate 0 (string-match " - " candidate)))
 
+(defun hgs/clone (candidate)
+  (unless (executable-find "git") (error "git not found."))
+  (let* ((repo-name (hgs/get-repo-name candidate))
+         (repository (format "https://github.com/%s.git" repo-name))
+         (default-clone-directory
+           (substring repo-name (1+ (string-match "/" repo-name))))
+         (directory
+          (read-directory-name
+           (format "Clone %s to: " repo-name) nil nil nil default-clone-directory))
+         (command (format "git clone %s %s" repository directory))
+         (output-buffer "*git-clone-output*")
+         (ret (let ((progress-reporter
+                     (make-progress-reporter (format "Running '%s'..." command)
+                                             nil nil)))
+                (prog1 (call-process-shell-command command nil output-buffer)
+                  (progress-reporter-done progress-reporter)))))
+    (if (zerop ret)
+        (progn
+          (kill-buffer output-buffer)
+          (message "Git clone done."))
+      (error "Git clone failed, see %s buffer for details." output-buffer))))
+
 (defvar hgs/helm-stars-actions
   (helm-make-actions
    "Browse URL"
@@ -331,7 +353,9 @@ METHOD is a funcall symbol, call it for a list of stars and repos."
    (lambda (candidate)
      "Unstar a starred repository."
      (let ((repo-name (hgs/get-repo-name candidate)))
-       (hgs/unstar-or-delete-repo "https://api.github.com/user/starred/" repo-name)))))
+       (hgs/unstar-or-delete-repo "https://api.github.com/user/starred/" repo-name)))
+   "Clone"
+   #'hgs/clone))
 
 (defvar hgs/helm-repos-actions
   (helm-make-actions
@@ -345,7 +369,9 @@ METHOD is a funcall symbol, call it for a list of stars and repos."
    (lambda (candidate)
      "Delete a user repository."
      (let ((repo-name (hgs/get-repo-name candidate)))
-       (hgs/unstar-or-delete-repo "https://api.github.com/repos/" repo-name)))))
+       (hgs/unstar-or-delete-repo "https://api.github.com/repos/" repo-name)))
+   "Clone"
+   #'hgs/clone))
 
 (defvar hgs/helm-c-source-stars
   (helm-build-in-buffer-source "Starred repositories"
