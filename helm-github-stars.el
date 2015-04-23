@@ -73,7 +73,6 @@
 (require 'helm-utils)
 (require 'json)
 (require 'subr-x)
-(eval-when-compile (require 'cl))
 
 (defgroup helm-github-stars nil
   "Helm integration for your starred repositories on github."
@@ -130,14 +129,60 @@ When disabled (nil) don't refetch automatically. "
 (defvar hgs/github-url "https://github.com/"
   "Github URL for browsing.")
 
-(defun helm-github-stars-source-init (method)
-  "Helm source initialization.
+(defvar hgs/helm-stars-actions
+  (helm-make-actions
+   "Browse URL"
+   (lambda (candidate)
+     (browse-url (concat hgs/github-url (hgs/get-repo-name candidate))))
+   "Show URL"
+   (lambda (candidate)
+     (message (concat hgs/github-url (hgs/get-repo-name candidate))))
+   "Clone"
+   #'hgs/clone
+   "Unstar"
+   (lambda (candidate)
+     "Unstar a starred repository."
+     (let ((repo-name (hgs/get-repo-name candidate)))
+       (hgs/unstar-or-delete-repo "https://api.github.com/user/starred/" repo-name)))))
 
-METHOD is a funcall symbol, call it for a list of stars and repos."
-  (lexical-let ((method method))
-    (lambda ()
-      (with-current-buffer (helm-candidate-buffer 'local)
-        (insert (mapconcat 'identity (funcall method) "\n"))))))
+(defvar hgs/helm-repos-actions
+  (helm-make-actions
+   "Browse URL"
+   (lambda (candidate)
+     (browse-url (concat hgs/github-url (hgs/get-repo-name candidate))))
+   "Show URL"
+   (lambda (candidate)
+     (message (concat hgs/github-url (hgs/get-repo-name candidate))))
+   "Clone"
+   #'hgs/clone
+   "Delete"
+   (lambda (candidate)
+     "Delete a user repository."
+     (let ((repo-name (hgs/get-repo-name candidate)))
+       (hgs/unstar-or-delete-repo "https://api.github.com/repos/" repo-name)))))
+
+(defvar hgs/helm-c-source-stars
+  (helm-build-in-buffer-source "Starred repositories"
+    :init (lambda ()
+            (with-current-buffer (helm-candidate-buffer 'local)
+              (insert (mapconcat 'identity (hgs/get-github-stars) "\n"))))
+    :real-to-display (lambda (candidate) (hgs/align-description candidate))
+    :action hgs/helm-stars-actions)
+  "Helm source definition.")
+
+(defvar hgs/helm-c-source-repos
+  (helm-build-in-buffer-source "Your repositories"
+    :init (lambda ()
+            (with-current-buffer (helm-candidate-buffer 'local)
+              (insert (mapconcat 'identity (hgs/get-github-repos) "\n"))))
+    :real-to-display (lambda (candidate) (hgs/align-description candidate))
+    :action hgs/helm-repos-actions)
+  "Helm source definition.")
+
+(defvar hgs/helm-c-source-search
+  (helm-build-dummy-source "Search on github"
+    :action (lambda (candidate)
+              (browse-url (concat "https://github.com/search?q=" candidate)))))
 
 (defun hgs/align-description (item)
   "Truncate repo name in ITEM."
@@ -341,56 +386,6 @@ METHOD is a funcall symbol, call it for a list of stars and repos."
           (message "Git clone done."))
       (error "Git clone failed, see %s buffer for details." output-buffer))))
 
-(defvar hgs/helm-stars-actions
-  (helm-make-actions
-   "Browse URL"
-   (lambda (candidate)
-     (browse-url (concat hgs/github-url (hgs/get-repo-name candidate))))
-   "Show URL"
-   (lambda (candidate)
-     (message (concat hgs/github-url (hgs/get-repo-name candidate))))
-   "Clone"
-   #'hgs/clone
-   "Unstar"
-   (lambda (candidate)
-     "Unstar a starred repository."
-     (let ((repo-name (hgs/get-repo-name candidate)))
-       (hgs/unstar-or-delete-repo "https://api.github.com/user/starred/" repo-name)))))
-
-(defvar hgs/helm-repos-actions
-  (helm-make-actions
-   "Browse URL"
-   (lambda (candidate)
-     (browse-url (concat hgs/github-url (hgs/get-repo-name candidate))))
-   "Show URL"
-   (lambda (candidate)
-     (message (concat hgs/github-url (hgs/get-repo-name candidate))))
-   "Clone"
-   #'hgs/clone
-   "Delete"
-   (lambda (candidate)
-     "Delete a user repository."
-     (let ((repo-name (hgs/get-repo-name candidate)))
-       (hgs/unstar-or-delete-repo "https://api.github.com/repos/" repo-name)))))
-
-(defvar hgs/helm-c-source-stars
-  (helm-build-in-buffer-source "Starred repositories"
-    :init (helm-github-stars-source-init 'hgs/get-github-stars)
-    :real-to-display (lambda (candidate) (hgs/align-description candidate))
-    :action hgs/helm-stars-actions)
-  "Helm source definition.")
-
-(defvar hgs/helm-c-source-repos
-  (helm-build-in-buffer-source "Your repositories"
-    :init (helm-github-stars-source-init 'hgs/get-github-repos)
-    :real-to-display (lambda (candidate) (hgs/align-description candidate))
-    :action hgs/helm-repos-actions)
-  "Helm source definition.")
-
-(defvar hgs/helm-c-source-search
-  (helm-build-dummy-source "Search on github"
-    :action (lambda (candidate)
-              (browse-url (concat "https://github.com/search?q=" candidate)))))
 
 (defun helm-github-stars-fetch ()
   "Remove cache file before calling helm-github-stars."
