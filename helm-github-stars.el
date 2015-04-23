@@ -349,13 +349,13 @@ METHOD is a funcall symbol, call it for a list of stars and repos."
    "Show URL"
    (lambda (candidate)
      (message (concat hgs/github-url (hgs/get-repo-name candidate))))
+   "Clone"
+   #'hgs/clone
    "Unstar"
    (lambda (candidate)
      "Unstar a starred repository."
      (let ((repo-name (hgs/get-repo-name candidate)))
-       (hgs/unstar-or-delete-repo "https://api.github.com/user/starred/" repo-name)))
-   "Clone"
-   #'hgs/clone))
+       (hgs/unstar-or-delete-repo "https://api.github.com/user/starred/" repo-name)))))
 
 (defvar hgs/helm-repos-actions
   (helm-make-actions
@@ -365,13 +365,13 @@ METHOD is a funcall symbol, call it for a list of stars and repos."
    "Show URL"
    (lambda (candidate)
      (message (concat hgs/github-url (hgs/get-repo-name candidate))))
+   "Clone"
+   #'hgs/clone
    "Delete"
    (lambda (candidate)
      "Delete a user repository."
      (let ((repo-name (hgs/get-repo-name candidate)))
-       (hgs/unstar-or-delete-repo "https://api.github.com/repos/" repo-name)))
-   "Clone"
-   #'hgs/clone))
+       (hgs/unstar-or-delete-repo "https://api.github.com/repos/" repo-name)))))
 
 (defvar hgs/helm-c-source-stars
   (helm-build-in-buffer-source "Starred repositories"
