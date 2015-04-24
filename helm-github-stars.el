@@ -73,7 +73,6 @@
 (require 'helm-utils)
 (require 'json)
 (require 'subr-x)
-(eval-when-compile (require 'cl))
 
 (defgroup helm-github-stars nil
   "Helm integration for your starred repositories on github."
@@ -94,7 +93,7 @@ To generate an access token:
   1. Visit the page https://github.com/settings/tokens/new and
      login to github (if asked).
   2. Give the token any name you want (helm-github-stars, for instance).
-  3. The only permission we need is \"repo\", so unmark
+  3. The permission we need is \"repo\" and \"delete_repo\", so unmark
      all others.
   4. Click on \"Generate Token\", copy the generated token, and
      save it to this variable by writing
@@ -130,35 +129,54 @@ When disabled (nil) don't refetch automatically. "
 (defvar hgs/github-url "https://github.com/"
   "Github URL for browsing.")
 
-(defun helm-github-stars-source-init (method)
-  "Helm source initialization.
-
-METHOD is a funcall symbol, call it for a list of stars and repos."
-  (lexical-let ((method method))
-    (lambda ()
-      (with-current-buffer (helm-candidate-buffer 'local)
-        (insert (mapconcat 'identity (funcall method) "\n"))))))
-
-(defvar helm-github-stars-actions
+(defvar hgs/helm-stars-actions
   (helm-make-actions
    "Browse URL"
    (lambda (candidate)
-     (let ((repo-name (substring candidate 0 (string-match " - " candidate))))
-       (browse-url (concat hgs/github-url repo-name))))
-   "Show Repo" 'message))
+     (browse-url (concat hgs/github-url (hgs/get-repo-name candidate))))
+   "Show URL"
+   (lambda (candidate)
+     (message (concat hgs/github-url (hgs/get-repo-name candidate))))
+   "Clone"
+   #'hgs/clone
+   "Unstar"
+   (lambda (candidate)
+     "Unstar a starred repository."
+     (let ((repo-name (hgs/get-repo-name candidate)))
+       (hgs/unstar-or-delete-repo "https://api.github.com/user/starred/" repo-name)))))
+
+(defvar hgs/helm-repos-actions
+  (helm-make-actions
+   "Browse URL"
+   (lambda (candidate)
+     (browse-url (concat hgs/github-url (hgs/get-repo-name candidate))))
+   "Show URL"
+   (lambda (candidate)
+     (message (concat hgs/github-url (hgs/get-repo-name candidate))))
+   "Clone"
+   #'hgs/clone
+   "Delete"
+   (lambda (candidate)
+     "Delete a user repository."
+     (let ((repo-name (hgs/get-repo-name candidate)))
+       (hgs/unstar-or-delete-repo "https://api.github.com/repos/" repo-name)))))
 
 (defvar hgs/helm-c-source-stars
   (helm-build-in-buffer-source "Starred repositories"
-    :init (helm-github-stars-source-init 'hgs/get-github-stars)
+    :init (lambda ()
+            (with-current-buffer (helm-candidate-buffer 'local)
+              (insert (mapconcat 'identity (hgs/get-github-stars) "\n"))))
     :real-to-display (lambda (candidate) (hgs/align-description candidate))
-    :action helm-github-stars-actions)
+    :action hgs/helm-stars-actions)
   "Helm source definition.")
 
 (defvar hgs/helm-c-source-repos
   (helm-build-in-buffer-source "Your repositories"
-    :init (helm-github-stars-source-init 'hgs/get-github-repos)
+    :init (lambda ()
+            (with-current-buffer (helm-candidate-buffer 'local)
+              (insert (mapconcat 'identity (hgs/get-github-repos) "\n"))))
     :real-to-display (lambda (candidate) (hgs/align-description candidate))
-    :action helm-github-stars-actions)
+    :action hgs/helm-repos-actions)
   "Helm source definition.")
 
 (defvar hgs/helm-c-source-search
@@ -322,6 +340,52 @@ METHOD is a funcall symbol, call it for a list of stars and repos."
   (when (not (hgs/cache-file-exists))
     (hgs/generate-cache-file))
   (gethash "repos" (hgs/read-cache-file)))
+
+(defun hgs/unstar-or-delete-repo (api repo-name)
+  "Unstar a starred repository or delete a user repository."
+  (unless helm-github-stars-token
+    (error "`helm-github-stars-token' is nil."))
+
+  (let ((url-request-method "DELETE")
+        (url-request-extra-headers
+         `(("Authorization" . ,(format "token %s" helm-github-stars-token)))))
+    (with-current-buffer (url-retrieve-synchronously (concat api repo-name))
+      (goto-char (point-min))
+      (when (not (string-match "204 No Content" (buffer-string)))
+        (error "Problem unstar or delete repo."))
+      (kill-buffer)))
+
+  ;; FIXME: there is no way to modify the cache file
+  ;; (puthash "stars" (delete candidate (gethash "stars" (hgs/read-cache-file)))
+  ;;          (hgs/read-cache-file))
+  ;; (hgs/write-cache-file cache-hash-table)
+  (helm-github-stars-fetch))
+
+(defun hgs/get-repo-name (candidate)
+  (substring candidate 0 (string-match " - " candidate)))
+
+(defun hgs/clone (candidate)
+  (unless (executable-find "git") (error "git not found."))
+  (let* ((repo-name (hgs/get-repo-name candidate))
+         (repository (format "https://github.com/%s.git" repo-name))
+         (default-clone-directory
+           (substring repo-name (1+ (string-match "/" repo-name))))
+         (directory
+          (read-directory-name
+           (format "Clone %s to: " repo-name) nil nil nil default-clone-directory))
+         (command (format "git clone %s %s" repository directory))
+         (output-buffer "*git-clone-output*")
+         (ret (let ((progress-reporter
+                     (make-progress-reporter (format "Running '%s'..." command)
+                                             nil nil)))
+                (prog1 (call-process-shell-command command nil output-buffer)
+                  (progress-reporter-done progress-reporter)))))
+    (if (zerop ret)
+        (progn
+          (kill-buffer output-buffer)
+          (message "Git clone done."))
+      (error "Git clone failed, see %s buffer for details." output-buffer))))
+
 
 (defun helm-github-stars-fetch ()
   "Remove cache file before calling helm-github-stars."
