@@ -1,4 +1,4 @@
-;;; helm-github-stars.el --- Helm integration for your starred repositories on github
+;;; helm-github-stars.el --- Helm integration for your starred repositories on github  -*- lexical-binding: t; -*-
 ;;
 ;; Author: Sliim <sliim@mailoo.org>
 ;;    xuchunyang <xuchunyang56@gmail.com>
@@ -372,7 +372,9 @@ For example, to open just cloned repo in dired automatically:
   (substring candidate 0 (string-match " - " candidate)))
 
 (defun hgs/clone (candidate)
-  (unless (executable-find "git") (error "git not found."))
+  "Git clone in the background..
+When git cloen is not yet done, use `list-processes' to dispaly related process."
+  (unless (executable-find "git") (error "git not found"))
   (let* ((repo-name (hgs/get-repo-name candidate))
          (repository (format "https://github.com/%s.git" repo-name))
          (default-clone-directory
@@ -382,18 +384,15 @@ For example, to open just cloned repo in dired automatically:
            (format "Clone %s to: " repo-name) nil nil nil default-clone-directory))
          (command (format "git clone %s %s" repository directory))
          (output-buffer "*git-clone-output*")
-         (ret (let ((progress-reporter
-                     (make-progress-reporter (format "Running '%s'..." command)
-                                             nil nil)))
-                (prog1 (call-process-shell-command command nil output-buffer)
-                  (progress-reporter-done progress-reporter)))))
-    (if (zerop ret)
-        (progn
-          (kill-buffer output-buffer)
-          (message "Git clone done.")
-          (run-hook-with-args 'helm-github-stars-clone-done-hook directory))
-      (error "Git clone failed, see %s buffer for details." output-buffer))))
-
+         (proc (start-process-shell-command "git-clone" output-buffer command)))
+    (set-process-sentinel
+     proc
+     (lambda (_process event)
+       (unless (string-equal event "finished\n")
+         (error "Git clone failed, see %s buffer for details" output-buffer))
+       (kill-buffer output-buffer)
+       (message "Git clone done.")
+       (run-hook-with-args 'helm-github-stars-clone-done-hook directory)))))
 
 (defun helm-github-stars-fetch ()
   "Remove cache file before calling helm-github-stars."
