@@ -1,3 +1,9 @@
+2015-05-06  xuchunyang  <xuchunyang56@gmail.com>
+	* 1.3.0
+	- Possibility to enable automatic cache update
+	- Add Unstar/Delete helm actions
+	- Add Clone action
+
 2015-04-08  xuchunyang  <xuchunyang56@gmail.com>
 	* 1.2.1
 	- Improved repos description alignement
