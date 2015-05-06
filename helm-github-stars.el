@@ -129,6 +129,13 @@ When disabled (nil) don't refetch automatically. "
 (defvar hgs/github-url "https://github.com/"
   "Github URL for browsing.")
 
+(defvar helm-github-stars-clone-done-hook nil
+  "Normal hook run by `hgs/clone', after clone is done.
+Function in this hook takes one argument, path to just cloned repo.
+
+For example, to open just cloned repo in dired automatically:
+ (add-hook 'helm-github-stars-clone-done-hook #'dired)")
+
 (defvar hgs/helm-stars-actions
   (helm-make-actions
    "Browse URL"
@@ -383,7 +390,8 @@ When disabled (nil) don't refetch automatically. "
     (if (zerop ret)
         (progn
           (kill-buffer output-buffer)
-          (message "Git clone done."))
+          (message "Git clone done.")
+          (run-hook-with-args 'helm-github-stars-clone-done-hook directory))
       (error "Git clone failed, see %s buffer for details." output-buffer))))
 
 
