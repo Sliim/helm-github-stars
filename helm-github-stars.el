@@ -3,7 +3,7 @@
 ;; Author: Sliim <sliim@mailoo.org>
 ;;    xuchunyang <xuchunyang56@gmail.com>
 ;; URL: https://github.com/Sliim/helm-github-stars
-;; Version: 1.3.0
+;; Version: 1.3.1
 ;; Package-Requires: ((helm "1.6.8") (emacs "24.4"))
 ;; Keywords: helm github stars
 
