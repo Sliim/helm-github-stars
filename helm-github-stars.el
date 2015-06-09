@@ -147,37 +147,31 @@ Function in this hook takes one argument, path to just cloned repo.
 For example, to open just cloned repo in dired automatically:
  (add-hook 'helm-github-stars-clone-done-hook #'dired)")
 
+(defvar hgs/helm-stars-common-actions
+  '(("Browse URL" . (lambda (_candidate)
+                      (dolist (candidate (helm-marked-candidates))
+                        (browse-url
+                         (concat hgs/github-url candidate)))))
+    ("Show URL" . (lambda (candidate)
+                    (message
+                     (concat hgs/github-url candidate))))
+    ("Clone" . hgs/clone)))
+
 (defvar hgs/helm-stars-actions
-  (helm-make-actions
-   "Browse URL"
-   (lambda (candidate)
-     (browse-url (concat hgs/github-url (hgs/get-repo-name candidate))))
-   "Show URL"
-   (lambda (candidate)
-     (message (concat hgs/github-url (hgs/get-repo-name candidate))))
-   "Clone"
-   #'hgs/clone
-   "Unstar"
-   (lambda (candidate)
-     "Unstar a starred repository."
-     (let ((repo-name (hgs/get-repo-name candidate)))
-       (hgs/unstar-or-delete-repo "https://api.github.com/user/starred/" repo-name)))))
+  (append hgs/helm-stars-common-actions
+          '(("Unstar" . (lambda (candidate)
+                          "Unstar a starred repository."
+                          (hgs/unstar-or-delete-repo
+                           "https://api.github.com/user/starred/"
+                           candidate))))))
 
 (defvar hgs/helm-repos-actions
-  (helm-make-actions
-   "Browse URL"
-   (lambda (candidate)
-     (browse-url (concat hgs/github-url (hgs/get-repo-name candidate))))
-   "Show URL"
-   (lambda (candidate)
-     (message (concat hgs/github-url (hgs/get-repo-name candidate))))
-   "Clone"
-   #'hgs/clone
-   "Delete"
-   (lambda (candidate)
-     "Delete a user repository."
-     (let ((repo-name (hgs/get-repo-name candidate)))
-       (hgs/unstar-or-delete-repo "https://api.github.com/repos/" repo-name)))))
+  (append hgs/helm-stars-common-actions
+          '(("Delete" . (lambda (candidate)
+                          "Delete a user repository."
+                          (hgs/unstar-or-delete-repo
+                           "https://api.github.com/repos/"
+                           candidate))))))
 
 (defvar hgs/helm-c-source-stars
   (helm-build-in-buffer-source "Starred repositories"
@@ -185,6 +179,7 @@ For example, to open just cloned repo in dired automatically:
             (with-current-buffer (helm-candidate-buffer 'local)
               (insert (mapconcat 'identity (hgs/get-github-stars) "\n"))))
     :real-to-display (lambda (candidate) (hgs/align-description candidate))
+    :coerce (lambda (candidate) (hgs/get-repo-name candidate))
     :action hgs/helm-stars-actions)
   "Helm source definition.")
 
@@ -194,6 +189,7 @@ For example, to open just cloned repo in dired automatically:
             (with-current-buffer (helm-candidate-buffer 'local)
               (insert (mapconcat 'identity (hgs/get-github-repos) "\n"))))
     :real-to-display (lambda (candidate) (hgs/align-description candidate))
+    :coerce (lambda (candidate) (hgs/get-repo-name candidate))
     :action hgs/helm-repos-actions)
   "Helm source definition.")
 
@@ -386,7 +382,7 @@ For example, to open just cloned repo in dired automatically:
   "Git clone in the background..
 When git cloen is not yet done, use `list-processes' to dispaly related process."
   (unless (executable-find "git") (error "git not found"))
-  (let* ((repo-name (hgs/get-repo-name candidate))
+  (let* ((repo-name candidate)
          (repository (format "https://github.com/%s.git" repo-name))
          (default-clone-directory
            (substring repo-name (1+ (string-match "/" repo-name))))
