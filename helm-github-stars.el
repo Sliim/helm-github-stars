@@ -126,6 +126,17 @@ When disabled (nil) don't refetch automatically. "
   :type '(choice (const :tag "Disabled" nil)
                  (number :tag "Days to refetch cache file")))
 
+(defcustom helm-github-stars-full-frame helm-full-frame
+  "Use full-screen window to show candidates in the `helm-github-stars' command.
+Its default value is `helm-full-frame' (whose default value is nil)."
+  :type 'boolean)
+
+(defcustom helm-github-stars-default-sources '(hgs/helm-c-source-stars
+                                               hgs/helm-c-source-repos
+                                               hgs/helm-c-source-search)
+  "Default sources list used in the `helm-github-stars' command."
+  :type '(repeat (choice symbol)))
+
 (defvar hgs/github-url "https://github.com/"
   "Github URL for browsing.")
 
@@ -405,12 +416,11 @@ When git cloen is not yet done, use `list-processes' to dispaly related process.
   "Show and Browse your github's stars."
   (interactive)
   (hgs/clear-cache-file-by-time)
-  (helm :sources '(hgs/helm-c-source-stars
-                   hgs/helm-c-source-repos
-                   hgs/helm-c-source-search)
+  (helm :sources helm-github-stars-default-sources
         :candidate-number-limit 9999
         :buffer "*helm github stars*"
-        :prompt "> "))
+        :prompt "> "
+        :full-frame helm-github-stars-full-frame))
 
 (provide 'helm-github-stars)
 
