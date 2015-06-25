@@ -1,3 +1,8 @@
+2015-06-26  xuchunyang  <xuchunyang56@gmail.com>
+	* 1.3.2
+	- Add some customizations
+	- Handle multiple selections
+
 2015-05-11  xuchunyang  <xuchunyang56@gmail.com>
 	* 1.3.1
 	- Clone repository asynchronously
