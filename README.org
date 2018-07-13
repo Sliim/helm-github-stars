@@ -1,18 +1,18 @@
 * Helm Github Stars
 
-[[http://travis-ci.org/Sliim/helm-github-stars][http://secure.travis-ci.org/Sliim/helm-github-stars.png?branch=master]]
-[[http://melpa.org/#/helm-github-stars][file:http://melpa.org/packages/helm-github-stars-badge.svg]]
-[[http://stable.melpa.org/#/helm-github-stars][file:http://stable.melpa.org/packages/helm-github-stars-badge.svg]]
+[[https://travis-ci.org/Sliim/helm-github-stars][https://secure.travis-ci.org/Sliim/helm-github-stars.png?branch=master]]
+[[https://melpa.org/#/helm-github-stars][file:https://melpa.org/packages/helm-github-stars-badge.svg]]
+[[https://stable.melpa.org/#/helm-github-stars][file:https://stable.melpa.org/packages/helm-github-stars-badge.svg]]
 
 ~helm-github-stars~ provides capabilities to fetch your starred repositories from github and select one for browsing.
 
 ** Requirements
   - Emacs >= 24.4
-  - [[http://melpa.org/#/helm][Helm]] >= 1.6.8
+  - [[https://melpa.org/#/helm][Helm]] >= 1.6.8
 
 ** Installation
 *** MELPA
-~helm-github-stars~ is available on [[http://melpa.milkbox.net/][Melpa]]:
+~helm-github-stars~ is available on [[https://melpa.milkbox.net/][Melpa]]:
 #+BEGIN_SRC
 M-x package-install helm-github-stars
 #+END_SRC
