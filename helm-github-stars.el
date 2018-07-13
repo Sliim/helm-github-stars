@@ -401,13 +401,13 @@ When git cloen is not yet done, use `list-processes' to dispaly related process.
        (message "Git clone done.")
        (run-hook-with-args 'helm-github-stars-clone-done-hook directory)))))
 
+;;;###autoload
 (defun helm-github-stars-fetch ()
   "Remove cache file before calling helm-github-stars."
   (interactive)
   (hgs/clear-cache-file)
   (helm-github-stars))
 
-;;;###autoload
 (defun helm-github-stars ()
   "Show and Browse your github's stars."
   (interactive)
