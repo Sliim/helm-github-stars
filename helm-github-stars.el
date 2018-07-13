@@ -206,7 +206,7 @@ For example, to open just cloned repo in dired automatically:
     (concat
      ;; Name
      (if (> (string-width name) helm-github-stars-name-length)
-         (helm-substring-by-width name helm-github-stars-name-length)
+         (helm-substring-by-width name helm-github-stars-name-length "...")
        (concat name (make-string
                      (- (+ helm-github-stars-name-length 3)
                         (string-width name)) ? )))

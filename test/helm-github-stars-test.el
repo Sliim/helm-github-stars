@@ -124,7 +124,7 @@
         (repo4 "repo/dddd - description"))
     (should (string-equal (hgs/align-description repo1) "repo/a       description"))
     (should (string-equal (hgs/align-description repo2) "repo/bb      description"))
-    (should (string-equal (hgs/align-description repo3) "repo/cc   description"))
-    (should (string-equal (hgs/align-description repo4) "repo/dd   description"))))
+    (should (string-equal (hgs/align-description repo3) "repo/cc...   description"))
+    (should (string-equal (hgs/align-description repo4) "repo/dd...   description"))))
 
 ;;; helm-github-stars-test.el ends here
