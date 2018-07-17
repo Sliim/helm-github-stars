@@ -408,6 +408,7 @@ When git cloen is not yet done, use `list-processes' to dispaly related process.
   (hgs/clear-cache-file)
   (helm-github-stars))
 
+;;;###autoload
 (defun helm-github-stars ()
   "Show and Browse your github's stars."
   (interactive)
