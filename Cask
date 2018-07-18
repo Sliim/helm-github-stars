@@ -1,6 +1,6 @@
 (source melpa)
 
-(package "helm-github-stars" "1.3.4" "Helm interface for your github's stars")
+(package "helm-github-stars" "1.3.5" "Helm interface for your github's stars")
 
 (depends-on "helm")
 
