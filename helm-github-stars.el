@@ -319,28 +319,22 @@ For example, to open just cloned repo in dired automatically:
 
 (defun hgs/request-github (url)
   "Request Github URL and return response."
-  (with-current-buffer
-      (url-retrieve-synchronously url)
-    (let ((start (save-excursion
-                   (goto-char (point-min))
-                   (and (re-search-forward "\\[" (point-max) t)
-                        (match-beginning 0)))))
-      (and start
-           (decode-coding-string
-            (buffer-substring-no-properties start (point-max))
-            'utf-8)))))
+  (with-current-buffer (url-retrieve-synchronously url)
+    (goto-char url-http-end-of-headers)
+    (let* ((json-object-type 'hash-table)
+           (json-key-type 'string)
+           (json-array-type 'list)
+           (json (json-read)))
+      (when (and (hash-table-p json) (gethash "message" json))
+        (error (format "Github API request failed: %s" (gethash "message" json))))
+      json)))
 
 (defun hgs/parse-github-response (response)
   "Parse Github API RESPONSE to get repositories full name."
-  (let ((github-repos (json-read-from-string response))
-        (repos [])
-        (i 0))
-    (while (< i (length github-repos))
-      (setq repos (vconcat repos (vector (concat
-                                          (cdr (assoc 'full_name (elt github-repos i)))
-                                          " - "
-                                          (cdr (assoc 'description (elt github-repos i)))))))
-      (setq i (1+ i)))
+  (let ((repos []))
+    (dolist (repo response)
+      (setq repos (vconcat repos (vector (concat (gethash "full_name" repo) " - "
+                                                 (gethash "description" repo))))))
     repos))
 
 (defun hgs/get-github-stars ()
