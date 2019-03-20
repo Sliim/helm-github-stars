@@ -1,8 +1,6 @@
 (source melpa)
 
-(package "helm-github-stars" "1.3.5" "Helm interface for your github's stars")
-
-(depends-on "helm")
+(package-file "helm-github-stars.el")
 
 (development
  (depends-on "ert-runner")

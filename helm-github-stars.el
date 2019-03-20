@@ -1,4 +1,4 @@
-;;; helm-github-stars.el --- Helm integration for your starred repositories on github  -*- lexical-binding: t; -*-
+;;; helm-github-stars.el --- Helm interface for your github's stars -*- lexical-binding: t; -*-
 ;;
 ;; Author: Sliim <sliim@mailoo.org>
 ;;    xuchunyang <xuchunyang56@gmail.com>
