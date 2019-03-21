@@ -54,14 +54,20 @@
 
 ;;Stubing
 (defvar hgs-test/github-stars-response-stub
-  ["[ {\"full_name\": \"star/1\", \"description\": \"desc-star1\"},{\"full_name\": \"star/2\", \"description\": \"desc-star2\"}]"
-   "[ {\"full_name\": \"star/3\", \"description\": \"desc-star3\"}]"
-   "[ ]"])
+  (let ((json-object-type 'hash-table)
+        (json-key-type 'string)
+        (json-array-type 'list))
+    (vector (json-read-from-string "[ {\"full_name\": \"star/1\", \"description\": \"desc-star1\"},{\"full_name\": \"star/2\", \"description\": \"desc-star2\"}]")
+            (json-read-from-string "[ {\"full_name\": \"star/3\", \"description\": \"desc-star3\"}]")
+            '())))
 
 (defvar hgs-test/github-repos-response-stub
-  ["[ {\"full_name\": \"repo/1\", \"description\": \"desc-repo1\"},{\"full_name\": \"repo/2\", \"description\": \"desc-repo2\"}]"
-   "[ {\"full_name\": \"repo/3\", \"description\": \"desc-repo3\"}]"
-   "[ ]"])
+  (let ((json-object-type 'hash-table)
+        (json-key-type 'string)
+        (json-array-type 'list))
+    (vector (json-read-from-string "[ {\"full_name\": \"repo/1\", \"description\": \"desc-repo1\"},{\"full_name\": \"repo/2\", \"description\": \"desc-repo2\"}]")
+            (json-read-from-string "[ {\"full_name\": \"repo/3\", \"description\": \"desc-repo3\"}]")
+            '())))
 
 (defvar hgs-test/cache-string
   "\n#s(hash-table size 65 test equal rehash-size 1.5 rehash-threshold 0.8 data (\"stars\" [\"star/1 - desc-star1\" \"star/2 - desc-star2\" \"star/3 - desc-star3\"] \"repos\" [\"repo/1 - desc-repo1\" \"repo/2 - desc-repo2\" \"repo/3 - desc-repo3\"]))\n")
