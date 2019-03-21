@@ -70,7 +70,7 @@
             '())))
 
 (defvar hgs-test/cache-string
-  "\n#s(hash-table size 65 test equal rehash-size 1.5 rehash-threshold 0.8 data (\"stars\" [\"star/1 - desc-star1\" \"star/2 - desc-star2\" \"star/3 - desc-star3\"] \"repos\" [\"repo/1 - desc-repo1\" \"repo/2 - desc-repo2\" \"repo/3 - desc-repo3\"]))\n")
+  (concat "\n#s(hash-table size 65 test equal rehash-size 1.5 rehash-threshold " (if (>= emacs-major-version 26) "0.8125" "0.8") " data (\"stars\" [\"star/1 - desc-star1\" \"star/2 - desc-star2\" \"star/3 - desc-star3\"] \"repos\" [\"repo/1 - desc-repo1\" \"repo/2 - desc-repo2\" \"repo/3 - desc-repo3\"]))\n"))
 
 (defvar hgs-test/repos-list
   ["repo/1 - desc-repo1" "repo/2 - desc-repo2" "repo/3 - desc-repo3"])
