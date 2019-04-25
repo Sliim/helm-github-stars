@@ -324,7 +324,9 @@ For example, to open just cloned repo in dired automatically:
     (let* ((json-object-type 'hash-table)
            (json-key-type 'string)
            (json-array-type 'list)
-           (json (json-read)))
+           (json (json-read-from-string
+                  (decode-coding-string
+                   (buffer-substring-no-properties (point) (point-max)) 'utf-8))))
       (when (and (hash-table-p json) (gethash "message" json))
         (error (format "Github API request failed: %s" (gethash "message" json))))
       json)))
