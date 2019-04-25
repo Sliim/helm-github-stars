@@ -77,3 +77,23 @@ Move into repository's root directory and run:
 cask install
 cask exec ert-runner
 #+END_SRC
+** Known issues
+*** wrong-type-argument integer-or-marker-p nil
+Reported in https://github.com/Sliim/helm-github-stars/issues/26
+
+Github API use TLS 1.3 which don't like emacs's default TLS settings.
+
+I suggest to set these settings in your emacs configuration:
+```
+(setq gnutls-verify-error t
+      gnutls-min-prime-bits 2048
+      gnutls-algorithm-priority "SECURE192:+SECURE128:-VERS-ALL:+VERS-TLS1.2"
+      nsm-settings-file (expand-file-name "network-security.data" user-emacs-directory)
+      nsm-save-host-names t
+      network-security-level 'high
+      tls-checktrust t
+      tls-program '("gnutls-cli -p %p --dh-bits=2048 --ocsp --x509cafile=%t --priority='SECURE192:+SECURE128:-VERS-ALL:+VERS-TLS1.2:%%PROFILE_MEDIUM' %h"))
+```
+Sources:
+- https://github.com/Sliim/emacs.d/blob/master/modules/emacsd-tls-hardening-module.el
+- https://www.reddit.com/r/emacs/comments/8sykl1/emacs_tls_defaults_are_downright_dangerous/
