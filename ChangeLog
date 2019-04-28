@@ -1,3 +1,7 @@
+2019-04-28  Sliim
+	* 1.3.7
+	- Fix UTF-8 coding system
+
 2019-03-26  Sliim
 	* 1.3.6
 	- Github JSON response parsing improvement
